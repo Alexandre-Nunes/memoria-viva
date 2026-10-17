@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -11,9 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -32,12 +31,7 @@
       content: "";
       position: fixed;
       inset: 0;
-      background: radial-gradient(
-        ellipse at top,
-        #202b46 0%,
-        #0b1020 55%,
-        #070a12 100%
-      );
+      background: radial-gradient(ellipse at top, #202b46 0%, #0b1020 55%, #070a12 100%);
       z-index: -1;
       pointer-events: none;
     }
@@ -133,10 +127,6 @@
       display: none !important;
     }
 
-    .sound-button:active {
-      transform: scale(0.98);
-    }
-
     .note {
       max-width: 650px;
       margin: 0 auto;
@@ -148,9 +138,7 @@
     }
 
     @media (max-width: 480px) {
-      header {
-        padding-top: 22px;
-      }
+      header { padding-top: 22px; }
 
       .stage {
         width: calc(100% - 16px);
@@ -158,9 +146,7 @@
         border-radius: 18px;
       }
 
-      a-scene {
-        border-radius: 18px;
-      }
+      a-scene { border-radius: 18px; }
     }
   </style>
 </head>
@@ -193,8 +179,7 @@
           preload="auto"
           muted
           playsinline
-          webkit-playsinline
-          crossorigin="anonymous">
+          webkit-playsinline>
         </video>
       </a-assets>
 
@@ -251,6 +236,7 @@
 
       video.muted = true;
       soundButton.hidden = false;
+      soundButton.textContent = '🔊 Ativar som';
 
       try {
         video.currentTime = 0;
@@ -262,41 +248,36 @@
       }
     });
 
-    
-soundButton.addEventListener('click', async () => {
-  if (!targetVisible) return;
+    soundButton.addEventListener('click', async () => {
+      if (!targetVisible) return;
 
-  try {
-    video.pause();
-    video.muted = false;
-    video.defaultMuted = false;
-    video.volume = 1;
+      try {
+        video.muted = false;
+        video.defaultMuted = false;
+        video.volume = 1;
 
-    await video.play();
+        if (video.paused) {
+          await video.play();
+        }
 
-    soundButton.textContent = '🔊 Som ativado';
-    status.textContent = 'Áudio ativado! Aproveite sua lembrança.';
-    soundButton.hidden = true;
-
-  } catch (error) {
-    video.muted = true;
-    soundButton.hidden = false;
-    soundButton.textContent = '🔊 Tentar ativar som novamente';
-
-    status.textContent =
-      'Não foi possível ativar o áudio. Verifique o volume do celular e tente novamente.';
-
-    console.error('Erro ao ativar áudio:', error);
-  }
-});
-
+        soundButton.hidden = true;
+        status.textContent = 'Som ativado. Aproveite sua lembrança!';
+      } catch (error) {
+        soundButton.hidden = false;
+        soundButton.textContent = '🔊 Tentar ativar som novamente';
+        status.textContent =
+          'Não foi possível ativar o áudio. Verifique o volume do celular e tente novamente.';
+        console.error('Erro ao ativar áudio:', error);
+      }
+    });
 
     target.addEventListener('targetLost', () => {
       targetVisible = false;
       status.textContent =
         'Foto fora de visão. Aponte novamente para a foto.';
       video.pause();
-      video.muted = true;
+
+      // Não alteramos video.muted aqui.
       soundButton.hidden = true;
     });
 
@@ -318,4 +299,3 @@ soundButton.addEventListener('click', async () => {
   </script>
 </body>
 </html>
-
