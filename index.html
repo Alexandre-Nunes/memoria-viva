@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -45,7 +44,7 @@
       font-size: clamp(1.8rem, 7vw, 2.5rem);
       font-weight: 800;
       letter-spacing: -0.04em;
-      background: linear-gradient(90deg, #ffffff, #8be9fd);
+      background: linear-gradient(90deg, #fff, #8be9fd);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -54,7 +53,7 @@
     .tagline {
       margin-top: 8px;
       color: #b8c7df;
-      font-size: 0.95rem;
+      font-size: .95rem;
     }
 
     .pill {
@@ -63,9 +62,9 @@
       padding: 7px 13px;
       border: 1px solid #405574;
       border-radius: 999px;
-      background: rgba(77, 130, 190, 0.12);
+      background: rgba(77, 130, 190, .12);
       color: #a9e8ff;
-      font-size: 0.78rem;
+      font-size: .78rem;
     }
 
     .instructions {
@@ -88,7 +87,7 @@
       border: 1px solid #354664;
       border-radius: 22px;
       background: transparent;
-      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, .25);
     }
 
     a-scene {
@@ -105,7 +104,7 @@
       padding: 10px 18px;
       text-align: center;
       color: #a9e8ff;
-      font-size: 0.95rem;
+      font-size: .95rem;
       font-weight: 600;
       line-height: 1.5;
     }
@@ -113,7 +112,7 @@
     .sound-button {
       display: block;
       margin: 10px auto 18px;
-      padding: 13px 22px;
+      padding: 14px 24px;
       border: 1px solid #52769d;
       border-radius: 14px;
       background: #17243b;
@@ -121,6 +120,7 @@
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .sound-button[hidden] {
@@ -133,7 +133,7 @@
       padding: 0 20px 26px;
       text-align: center;
       color: #8796b0;
-      font-size: 0.8rem;
+      font-size: .8rem;
       line-height: 1.5;
     }
 
@@ -189,8 +189,8 @@
       </a-camera>
 
       <a-entity
-        mindar-image-target="targetIndex: 0"
-        id="photoTarget">
+        id="photoTarget"
+        mindar-image-target="targetIndex: 0">
 
         <a-video
           src="#memoryVideo"
@@ -204,7 +204,7 @@
     </a-scene>
   </div>
 
-  <div class="status" id="status">
+  <div class="status" id="status" role="status" aria-live="polite">
     Preparando a câmera…
   </div>
 
@@ -222,80 +222,113 @@
   </div>
 
   <script>
-    const target = document.querySelector('#photoTarget');
-    const video = document.querySelector('#memoryVideo');
-    const status = document.querySelector('#status');
-    const soundButton = document.querySelector('#soundButton');
-    const scene = document.querySelector('a-scene');
+    (() => {
+      const target = document.querySelector('#photoTarget');
+      const video = document.querySelector('#memoryVideo');
+      const status = document.querySelector('#status');
+      const soundButton = document.querySelector('#soundButton');
+      const scene = document.querySelector('a-scene');
 
-    let targetVisible = false;
+      let targetVisible = false;
+      let soundEnabled = false;
 
-    target.addEventListener('targetFound', async () => {
-      targetVisible = true;
-      status.textContent = 'Foto reconhecida! Reproduzindo sua lembrança…';
-
+      // Configura o vídeo para reprodução no celular.
       video.muted = true;
-      soundButton.hidden = false;
-      soundButton.textContent = '🔊 Ativar som';
+      video.defaultMuted = true;
+      video.volume = 1;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
 
-      try {
-        video.currentTime = 0;
-        await video.play();
-      } catch (error) {
+      target.addEventListener('targetFound', async () => {
+        targetVisible = true;
+        soundEnabled = false;
+
         status.textContent =
-          'Não foi possível iniciar o vídeo. Aponte novamente para a foto.';
-        console.error('Erro ao reproduzir vídeo:', error);
-      }
-    });
+          'Foto reconhecida! Reproduzindo sua lembrança…';
 
-    soundButton.addEventListener('click', async () => {
-      if (!targetVisible) return;
-
-      try {
-        video.muted = false;
-        video.defaultMuted = false;
-        video.volume = 1;
-
-        if (video.paused) {
-          await video.play();
-        }
-
-        soundButton.hidden = true;
-        status.textContent = 'Som ativado. Aproveite sua lembrança!';
-      } catch (error) {
+        soundButton.textContent = '🔊 Ativar som';
         soundButton.hidden = false;
-        soundButton.textContent = '🔊 Tentar ativar som novamente';
+
+        // Reprodução automática silenciosa, permitida na maioria
+        // dos navegadores móveis.
+        video.muted = true;
+
+        try {
+          video.currentTime = 0;
+          await video.play();
+        } catch (error) {
+          status.textContent =
+            'Não foi possível iniciar o vídeo. Toque na tela e tente novamente.';
+          console.error('Erro ao iniciar vídeo:', error);
+        }
+      });
+
+      // O áudio é ativado diretamente pelo toque do usuário.
+      soundButton.addEventListener('click', async () => {
+        try {
+          video.muted = false;
+          video.defaultMuted = false;
+          video.volume = 1;
+          video.removeAttribute('muted');
+
+          // Se o vídeo estiver parado, tenta continuar a reprodução.
+          if (video.paused) {
+            await video.play();
+          }
+
+          soundEnabled = true;
+          soundButton.hidden = true;
+          status.textContent = '🔊 Áudio ativado! Aproveite sua lembrança.';
+        } catch (error) {
+          video.muted = true;
+          soundEnabled = false;
+          soundButton.hidden = false;
+          soundButton.textContent = '🔊 Tentar ativar som novamente';
+
+          status.textContent =
+            'O celular bloqueou o áudio. Verifique o volume e toque novamente.';
+          console.error('Erro ao liberar áudio:', error);
+        }
+      });
+
+      target.addEventListener('targetLost', () => {
+        targetVisible = false;
+
         status.textContent =
-          'Não foi possível ativar o áudio. Verifique o volume do celular e tente novamente.';
-        console.error('Erro ao ativar áudio:', error);
-      }
-    });
+          'Foto fora de visão. Aponte novamente para a foto.';
 
-    target.addEventListener('targetLost', () => {
-      targetVisible = false;
-      status.textContent =
-        'Foto fora de visão. Aponte novamente para a foto.';
-      video.pause();
+        // Pausa o vídeo ao perder a imagem, mas não força o mute.
+        video.pause();
 
-      // Não alteramos video.muted aqui.
-      soundButton.hidden = true;
-    });
+        // O próximo reconhecimento inicia uma nova reprodução.
+        soundEnabled = false;
+        video.muted = true;
+        soundButton.hidden = true;
+      });
 
-    video.addEventListener('ended', () => {
-      status.textContent =
-        'Lembrança concluída. Aponte novamente para rever o vídeo.';
-      soundButton.hidden = true;
-    });
+      video.addEventListener('error', () => {
+        status.textContent =
+          'Erro ao carregar o vídeo. Confira o arquivo memoria.mp4.mp4.';
+        console.error('Erro de mídia:', video.error);
+      });
 
-    scene.addEventListener('arReady', () => {
-      status.textContent =
-        'Câmera pronta. Aponte para a foto cadastrada.';
-    });
+      video.addEventListener('ended', () => {
+        status.textContent =
+          'Lembrança concluída. Aponte novamente para rever o vídeo.';
+        soundButton.hidden = true;
+      });
 
-    scene.addEventListener('arError', () => {
-      status.textContent =
-        'Não foi possível iniciar a câmera. Confira a permissão e abra o site por HTTPS.';
-    });
+      scene.addEventListener('arReady', () => {
+        status.textContent =
+          'Câmera pronta. Aponte para a foto cadastrada.';
+      });
+
+      scene.addEventListener('arError', () => {
+        status.textContent =
+          'Não foi possível iniciar a câmera. Confira a permissão e use HTTPS.';
+      });
+    })();
   </script>
 </body>
 </html>
