@@ -107,6 +107,31 @@
       font-size: .78rem;
       color: #ddd;
     }
+    .stage {
+  background: transparent !important;
+}
+
+.stage a-scene,
+.stage .a-canvas,
+.stage canvas {
+  background: transparent !important;
+}
+
+/* Mantém a imagem da câmera visível atrás da cena AR */
+#mindar-video {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  z-index: 0 !important;
+}
+
+.stage canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+}
   </style>
 </head>
 
@@ -127,7 +152,7 @@
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
       embedded
       color-space="sRGB"
-      renderer="alpha: true; colorManagement: true; physicallyCorrectLights: true"
+      renderer="alpha: true; colorManagement: true; physicallyCorrectLights: true; sortObjects: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
 
