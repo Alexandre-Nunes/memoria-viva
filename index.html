@@ -14,8 +14,33 @@
     .brand { font-size: 1.35rem; font-weight: 800; letter-spacing: .02em; }
     .tagline { color: #c9c9c9; font-size: .92rem; margin-top: 5px; }
     .instructions { max-width: 650px; margin: 0 auto; padding: 0 18px 14px; text-align: center; color: #e4e4e4; line-height: 1.45; }
-    .stage { position: relative; width: 100%; height: min(66vh, 650px); min-height: 330px; background: #222; overflow: hidden; }
-    a-scene { width: 100%; height: 100%; }
+    .stage {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  min-height: 400px;
+  background: transparent;
+  overflow: hidden;
+}
+
+a-scene {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+a-scene canvas {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1;
+}
+
+.a-canvas {
+  background: transparent !important;
+}
     .status { max-width: 650px; margin: 12px auto; padding: 0 18px; text-align: center; font-size: .92rem; color: #ddd; }
     .note { max-width: 650px; margin: 0 auto; padding: 0 18px 24px; color: #aaa; font-size: .78rem; text-align: center; }
     .pill { display: inline-block; margin-top: 10px; border: 1px solid #555; border-radius: 999px; padding: 6px 11px; font-size: .78rem; color: #ddd; }
