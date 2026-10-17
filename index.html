@@ -1,397 +1,339 @@
 
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#171717">
-  <title>Memória Viva — Foto com vídeo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#101010">
+  <title>Memória Viva | Realidade Aumentada</title>
 
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      min-height: 100%;
-      font-family: system-ui, -apple-system, sans-serif;
-      color: #fff;
-      background: #171717;
+    * {
+      box-sizing: border-box;
     }
 
+    html,
     body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: #101010;
+      color: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    /* Câmera criada pelo MindAR */
-    body > video,
-    video.mindar-video {
-      position: fixed !important;
-      display: block !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-      z-index: 0 !important;
-      pointer-events: none !important;
-    }
-
-    /* Cena AR transparente sobre a câmera */
-    a-scene {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      background: transparent !important;
-      z-index: 1 !important;
-    }
-
-    a-scene canvas,
-    a-scene .a-canvas {
-      background: transparent !important;
-    }
-
-    .top, .bottom {
+    #app {
       position: fixed;
+      inset: 0;
+      background: #101010;
+    }
+
+    #topbar {
+      position: absolute;
+      top: 0;
       left: 0;
       right: 0;
       z-index: 10;
+      padding: 18px 16px 14px;
+      padding-top: max(18px, env(safe-area-inset-top));
       text-align: center;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.75),
+        rgba(0, 0, 0, 0)
+      );
       pointer-events: none;
     }
 
-    .top {
-      top: 0;
-      padding: calc(14px + env(safe-area-inset-top)) 16px 24px;
-      background: linear-gradient(
-        to bottom,
-        rgba(0,0,0,.85),
-        rgba(0,0,0,.35),
-        transparent
-      );
+    #topbar h1 {
+      margin: 0 0 6px;
+      font-size: 25px;
+      letter-spacing: 0.5px;
     }
 
-    .brand {
-      font-size: 1.4rem;
-      font-weight: 800;
-    }
-
-    .tagline {
-      margin-top: 4px;
-      color: #ddd;
-      font-size: .9rem;
-    }
-
-    .instructions {
-      margin: 10px auto 0;
-      max-width: 440px;
-      font-size: .88rem;
+    #topbar p {
+      margin: 0;
+      font-size: 14px;
       line-height: 1.4;
-    }
-
-    .bottom {
-      bottom: 0;
-      padding: 28px 16px calc(18px + env(safe-area-inset-bottom));
-      background: linear-gradient(
-        to top,
-        rgba(0,0,0,.88),
-        rgba(0,0,0,.35),
-        transparent
-      );
+      color: #eeeeee;
     }
 
     #status {
-      margin: 0 auto 12px;
-      max-width: 500px;
-      font-size: .9rem;
-      line-height: 1.45;
-      text-shadow: 0 1px 3px #000;
-    }
-
-    #playButton {
-      display: none;
-      margin: 0 auto;
-      padding: 13px 20px;
-      border: 0;
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 24px;
+      bottom: max(24px, env(safe-area-inset-bottom));
+      z-index: 20;
+      padding: 13px 16px;
       border-radius: 12px;
-      background: #1769aa;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      pointer-events: auto;
-      cursor: pointer;
+      background: rgba(0, 0, 0, 0.78);
+      color: #ffffff;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.4;
+      pointer-events: none;
     }
 
-    /*
-      O vídeo é usado como textura da superfície AR.
-      Não deve cobrir a câmera como elemento HTML.
-    */
-    #memoryVideo {
-      position: fixed;
-      width: 2px;
-      height: 2px;
-      left: -10px;
-      top: -10px;
-      opacity: 0.01;
+    #soundButton {
+      display: none;
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      bottom: 92px;
+      bottom: calc(92px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: calc(100% - 32px);
+      padding: 14px 20px;
+      border: 0;
+      border-radius: 30px;
+      background: #ffffff;
+      color: #111111;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #soundButton.visible {
+      display: block;
+    }
+
+    #startMessage {
+      position: absolute;
+      z-index: 15;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: calc(100% - 40px);
+      max-width: 320px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 15px;
+      line-height: 1.5;
       pointer-events: none;
+      text-shadow: 0 1px 4px #000000;
+    }
+
+    #startMessage.hidden {
+      display: none;
+    }
+
+    a-scene {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: transparent !important;
+    }
+
+    a-scene canvas,
+    .a-canvas {
+      background: transparent !important;
+    }
+
+    .a-enter-vr,
+    .a-orientation-modal,
+    .mindar-ui-overlay {
+      z-index: 5;
     }
   </style>
 </head>
 
 <body>
+  <div id="app">
 
-  <header class="top">
-    <div class="brand">Memória Viva</div>
-    <div class="tagline">Algumas lembranças merecem movimento.</div>
-    <div class="instructions">
+    <header id="topbar">
+      <h1>Memória Viva</h1>
+      <p>Aponte a câmera para a foto e reviva esse momento.</p>
+    </header>
+
+    <div id="startMessage">
       Permita o acesso à câmera e aponte para a foto cadastrada.
     </div>
-  </header>
 
-  <a-scene
-    mindar-image="
-      imageTargetSrc: ./targets.mind;
-      autoStart: true;
-      uiLoading: no;
-      uiScanning: yes;
-      uiError: yes;
-    "
-    embedded
-    renderer="alpha: true; colorManagement: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
-
-    <a-assets timeout="20000">
-      <video
-        id="memoryVideo"
-        src="./memoria.mp4"
-        preload="auto"
-        muted
-        playsinline
-        webkit-playsinline>
-      </video>
-    </a-assets>
-
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false">
-    </a-camera>
-
-    <a-entity
-      id="photoTarget"
-      mindar-image-target="targetIndex: 0">
-
-      <a-video
-        src="#memoryVideo"
-        position="0 0 0"
-        width="1"
-        height="0.5625"
-        material="shader: flat; side: double">
-      </a-video>
-
-    </a-entity>
-  </a-scene>
-
-  <footer class="bottom">
     <div id="status" role="status" aria-live="polite">
-      Carregando câmera e vídeo…
+      Preparando a câmera...
     </div>
 
-    <button id="playButton" type="button">
-      ▶ Reproduzir lembrança
+    <button id="soundButton" type="button">
+      🔊 Ativar som do vídeo
     </button>
-  </footer>
+
+    <!-- Vídeo utilizado como textura no objeto de realidade aumentada -->
+    <video
+      id="memoryVideo"
+      src="./memoria.mp4.mp4"
+      preload="auto"
+      muted
+      playsinline
+      webkit-playsinline
+      loop
+      crossorigin="anonymous"
+      style="display: none;"
+    ></video>
+
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
+      color-space="sRGB"
+      renderer="colorManagement: true, alpha: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      embedded
+    >
+      <a-assets>
+        <video
+          id="arVideo"
+          src="./memoria.mp4.mp4"
+          preload="auto"
+          muted
+          playsinline
+          webkit-playsinline
+          loop
+          crossorigin="anonymous"
+        ></video>
+      </a-assets>
+
+      <!-- A imagem cadastrada em targets.mind corresponde ao targetIndex 0 -->
+      <a-entity id="imageTarget" mindar-image-target="targetIndex: 0">
+
+        <!-- A proporção é ajustada pelo JavaScript quando o vídeo carrega -->
+        <a-video
+          id="videoPlane"
+          src="#arVideo"
+          width="1"
+          height="1"
+          position="0 0 0.01"
+          material="shader: flat; transparent: false"
+        ></a-video>
+
+      </a-entity>
+
+      <a-camera
+        position="0 0 0"
+        look-controls="enabled: false"
+      ></a-camera>
+    </a-scene>
+
+  </div>
 
   <script>
     (() => {
-      const scene = document.querySelector('a-scene');
-      const target = document.querySelector('#photoTarget');
-      const video = document.querySelector('#memoryVideo');
-      const status = document.querySelector('#status');
-      const button = document.querySelector('#playButton');
+      const scene = document.querySelector("a-scene");
+      const target = document.querySelector("#imageTarget");
+      const video = document.querySelector("#arVideo");
+      const plane = document.querySelector("#videoPlane");
+      const status = document.querySelector("#status");
+      const soundButton = document.querySelector("#soundButton");
+      const startMessage = document.querySelector("#startMessage");
 
       let targetVisible = false;
-      let videoReady = false;
-      let generation = 0;
 
-      video.muted = true;
-      video.defaultMuted = true;
-      video.playsInline = true;
-      video.preload = 'auto';
-      video.loop = true;
-
-      function message(text) {
-        status.textContent = text;
+      function setStatus(message) {
+        status.textContent = message;
       }
 
-      function showButton(text) {
-        button.textContent = text;
-        button.style.display = 'block';
+      function showSoundButton(show) {
+        soundButton.classList.toggle("visible", show);
       }
-
-      function hideButton() {
-        button.style.display = 'none';
-      }
-
-      video.addEventListener('canplay', () => {
-        videoReady = true;
-        console.log('Vídeo pronto para reprodução.');
-
-        if (!targetVisible) {
-          message('Câmera pronta. Aponte para a foto cadastrada.');
-        }
-      });
-
-      video.addEventListener('error', () => {
-        const code = video.error ? video.error.code : 'desconhecido';
-        console.error('Erro no vídeo:', code, video.error);
-
-        message(
-          'Falha ao carregar o vídeo. Confira memoria.mp4.mp4 no GitHub.'
-        );
-      });
 
       async function playMemory() {
-        if (!targetVisible) return;
-
-        const currentGeneration = ++generation;
-
-        message('Foto reconhecida! Iniciando vídeo…');
-
         try {
-          // Aguarda o arquivo ficar pronto, sem espera fixa.
-          if (!videoReady) {
-            await new Promise((resolve, reject) => {
-              if (video.readyState >= 3) {
-                videoReady = true;
-                resolve();
-                return;
-              }
-
-              const onReady = () => {
-                cleanup();
-                videoReady = true;
-                resolve();
-              };
-
-              const onError = () => {
-                cleanup();
-                reject(new Error('Falha no carregamento do vídeo.'));
-              };
-
-              const cleanup = () => {
-                video.removeEventListener('canplay', onReady);
-                video.removeEventListener('error', onError);
-              };
-
-              video.addEventListener('canplay', onReady);
-              video.addEventListener('error', onError);
-            });
-          }
-
-          if (!targetVisible || currentGeneration !== generation) return;
-
           video.muted = true;
+
           await video.play();
 
-          if (!targetVisible || currentGeneration !== generation) {
-            video.pause();
-            return;
+          if (targetVisible) {
+            setStatus("Foto reconhecida! Vídeo reproduzindo.");
+            showSoundButton(true);
           }
-
-          message('Lembrança reproduzindo. Toque para ativar o som.');
-          showButton('🔊 Ativar som');
         } catch (error) {
-          console.error('Reprodução não iniciada:', error);
+          console.warn("Não foi possível iniciar o vídeo:", error);
 
-          if (!targetVisible || currentGeneration !== generation) return;
-
-          message(
-            'Foto reconhecida. Toque no botão para iniciar a lembrança.'
-          );
-          showButton('▶ Reproduzir lembrança');
+          if (targetVisible) {
+            setStatus("Foto reconhecida! Toque no botão para reproduzir o vídeo.");
+            showSoundButton(true);
+          }
         }
       }
 
-      button.addEventListener('click', async () => {
-        if (!targetVisible) {
-          message('Aponte novamente para a foto cadastrada.');
+      // Ajusta a proporção do plano para não distorcer o vídeo.
+      function adjustVideoSize() {
+        if (!video.videoWidth || !video.videoHeight) {
           return;
         }
 
-        try {
-          if (video.paused) {
-            video.muted = false;
-            video.volume = 1;
-            await video.play();
-          } else {
-            video.muted = false;
-            video.volume = 1;
-          }
+        const aspectRatio = video.videoWidth / video.videoHeight;
 
-          hideButton();
-          message('Lembrança reproduzindo com som.');
-        } catch (error) {
-          console.error('Falha ao reproduzir com som:', error);
+        plane.setAttribute("width", 1);
+        plane.setAttribute("height", 1 / aspectRatio);
+      }
 
-          try {
-            video.muted = true;
-            await video.play();
+      video.addEventListener("loadedmetadata", adjustVideoSize);
+      video.addEventListener("loadeddata", adjustVideoSize);
 
-            message('Vídeo reproduzindo sem som.');
-            showButton('🔊 Tentar ativar som');
-          } catch (retryError) {
-            message('Não foi possível iniciar. Tente novamente.');
-            showButton('▶ Tentar novamente');
-          }
-        }
-      });
-
-      target.addEventListener('targetFound', () => {
+      target.addEventListener("targetFound", () => {
         targetVisible = true;
+        startMessage.classList.add("hidden");
+
+        setStatus("Foto reconhecida! Carregando vídeo...");
         playMemory();
       });
 
-      target.addEventListener('targetLost', () => {
+      target.addEventListener("targetLost", () => {
         targetVisible = false;
-        generation++;
-
         video.pause();
 
+        showSoundButton(false);
+        startMessage.classList.remove("hidden");
+        setStatus("Foto fora de visão. Aponte novamente para a foto.");
+      });
+
+      // O toque do usuário permite tentar habilitar o áudio no celular.
+      soundButton.addEventListener("click", async () => {
         try {
-          video.currentTime = 0;
+          video.muted = false;
+          video.volume = 1;
+
+          await video.play();
+
+          setStatus("Som ativado. Aproveite a lembrança!");
+          soundButton.textContent = "🔊 Som ativado";
         } catch (error) {
-          console.warn('Não foi possível reiniciar o vídeo.');
+          video.muted = true;
+          setStatus("Não foi possível ativar o som. Toque novamente para tentar.");
+          soundButton.textContent = "🔊 Tentar ativar o som";
+          console.warn("Falha ao ativar o áudio:", error);
         }
-
-        hideButton();
-        message('Foto fora de visão. Aponte novamente para a foto.');
       });
 
-      scene.addEventListener('arReady', () => {
-        message(
-          videoReady
-            ? 'Câmera pronta. Aponte para a foto cadastrada.'
-            : 'Câmera iniciada. Preparando o vídeo…'
-        );
+      scene.addEventListener("loaded", () => {
+        setStatus("Câmera iniciando. Permita o acesso quando solicitado.");
       });
 
-      scene.addEventListener('arError', event => {
-        console.error('Erro do MindAR:', event.detail || event);
-
-        message(
-          'Erro ao iniciar a câmera ou o reconhecimento. Verifique a permissão da câmera e os arquivos.'
-        );
+      scene.addEventListener("arReady", () => {
+        setStatus("Câmera pronta! Aponte para a foto cadastrada.");
       });
 
-      // Solicita o carregamento do vídeo antecipadamente.
-      video.load();
+      scene.addEventListener("arError", (event) => {
+        console.error("Erro ao iniciar a realidade aumentada:", event);
+        setStatus("Não foi possível iniciar a câmera. Verifique a permissão e recarregue a página.");
+      });
+
+      video.addEventListener("error", () => {
+        console.error("Erro ao carregar o vídeo:", video.error);
+        setStatus("Erro ao carregar o vídeo. Confira se memoria.mp4.mp4 está no GitHub.");
+      });
+
+      // Se o vídeo já tiver os metadados, ajusta imediatamente.
+      if (video.readyState >= 1) {
+        adjustVideoSize();
+      }
     })();
   </script>
 </body>
