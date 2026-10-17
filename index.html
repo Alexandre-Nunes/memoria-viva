@@ -21,7 +21,7 @@
       height: 100%;
       overflow: hidden;
       background: #101010;
-      color: white;
+      color: #fff;
       font-family: Arial, Helvetica, sans-serif;
     }
 
@@ -72,7 +72,7 @@
       text-align: center;
       font-size: 16px;
       line-height: 1.5;
-      text-shadow: 0 1px 5px black;
+      text-shadow: 0 1px 5px #000;
       pointer-events: none;
     }
 
@@ -90,9 +90,9 @@
       width: max-content;
       max-width: calc(100% - 32px);
       padding: 15px 22px;
-      border: none;
+      border: 0;
       border-radius: 30px;
-      background: white;
+      background: #fff;
       color: #111;
       font-size: 16px;
       font-weight: bold;
@@ -200,6 +200,7 @@
         if (!video.videoWidth || !video.videoHeight) return;
 
         const ratio = video.videoHeight / video.videoWidth;
+
         plane.setAttribute("width", 1);
         plane.setAttribute("height", ratio);
       }
@@ -211,7 +212,7 @@
         isPlaying = true;
 
         if (targetVisible) {
-          setStatus("Vídeo reproduzindo! Toque na tela para ativar o som.");
+          setStatus("Vídeo reproduzindo sem som. Toque em Ativar som se desejar.");
           button.textContent = "🔊 Ativar som";
           showPlayButton(true);
         }
@@ -221,11 +222,16 @@
         const errorCode = video.error ? video.error.code : 0;
 
         console.error("Erro no vídeo:", video.error);
-        console.error("Endereço:", video.currentSrc);
+        console.error("Endereço do vídeo:", video.currentSrc);
+
+        // Não apresenta erro antes do reconhecimento da foto.
+        if (!targetVisible) {
+          return;
+        }
 
         setStatus(
-          "Erro ao carregar o vídeo (código " + errorCode +
-          "). Verifique a conexão e o arquivo."
+          "Falha ao carregar o vídeo (código " + errorCode +
+          "). Toque para tentar novamente."
         );
 
         showPlayButton(true);
@@ -256,38 +262,29 @@
         setStatus("Foto fora de visão. Aponte novamente para a foto.");
       });
 
-      /*
-       * IMPORTANTE:
-       * video.play() é chamado diretamente no toque do usuário,
-       * sem aguardar outra operação antes dele.
-       * Isso ajuda a atender às restrições de reprodução do Safari.
-       */
       button.addEventListener("click", () => {
         if (!targetVisible) {
           setStatus("Aponte a câmera para a foto primeiro.");
           return;
         }
 
+        // Se já está reproduzindo, tenta habilitar o áudio.
         if (isPlaying && video.muted) {
           video.muted = false;
-
+          button.textContent = "🔊 Som ativado";
           setStatus("Tentando ativar o som...");
 
           if (video.paused) {
-            const retry = video.play();
-
-            if (retry && typeof retry.catch === "function") {
-              retry.catch((error) => {
-                console.error("Erro ao ativar o som:", error);
-                video.muted = true;
-                setStatus("O Safari bloqueou o som. Toque para tentar novamente.");
-              });
-            }
+            video.play().catch((error) => {
+              console.error("Erro ao ativar o som:", error);
+              video.muted = true;
+              setStatus("Não foi possível ativar o som. Toque para tentar novamente.");
+              button.textContent = "🔊 Ativar som";
+            });
           } else {
             setStatus("Som ativado.");
           }
 
-          button.textContent = "🔊 Som ativado";
           return;
         }
 
@@ -298,14 +295,13 @@
 
         setStatus("Iniciando reprodução...");
 
-        // A chamada ocorre imediatamente durante o clique.
+        // A chamada acontece diretamente no toque do usuário.
         const playRequest = video.play();
 
         if (playRequest && typeof playRequest.then === "function") {
           playRequest.then(() => {
             isPlaying = true;
             setStatus("Vídeo reproduzindo sem som.");
-
             button.textContent = "🔊 Ativar som";
             showPlayButton(true);
           }).catch((error) => {
@@ -313,7 +309,7 @@
 
             isPlaying = false;
             setStatus(
-              "O Safari não iniciou o vídeo. Verifique a conexão e tente novamente."
+              "O Safari não iniciou o vídeo. Tente novamente."
             );
 
             button.textContent = "↻ Tentar reproduzir";
