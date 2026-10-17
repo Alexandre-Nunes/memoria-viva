@@ -163,7 +163,13 @@ body::before {
 
       <!-- targetIndex 0 corresponde à primeira imagem cadastrada no arquivo targets.mind -->
       <a-entity mindar-image-target="targetIndex: 0" id="photoTarget">
-        <a-video src="#memoryVideo" position="0 0 0" width="1" height="0.5625"></a-video>
+        <a-video
+  src="#memoryVideo"
+  position="0 0 0.01"
+  width="1"
+  height="0.5625"
+  material="shader: flat; side: double">
+</a-video>
       </a-entity>
     </a-scene>
   </div>
