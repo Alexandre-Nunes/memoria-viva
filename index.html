@@ -188,11 +188,20 @@ body::before {
     const video = document.querySelector('#memoryVideo');
     const status = document.querySelector('#status');
 
-    target.addEventListener('targetFound', async () => {
-      status.textContent = 'Foto reconhecida! Reproduzindo sua lembrança…';
-      try { await video.play(); }
-      catch (e) { status.textContent = 'Foto reconhecida. Toque na tela para iniciar o vídeo, se solicitado pelo celular.'; }
-    });
+   target.addEventListener('targetFound', async () => {
+  status.textContent = 'Foto reconhecida! Reproduzindo sua lembrança…';
+
+  video.muted = true;
+
+  try {
+    video.currentTime = 0;
+    await video.play();
+  } catch (e) {
+    status.textContent =
+      'Foto reconhecida, mas não foi possível iniciar o vídeo. Tente atualizar a página.';
+    console.error('Erro ao reproduzir vídeo:', e);
+  }
+});
     target.addEventListener('targetLost', () => {
       status.textContent = 'Foto fora de visão. Aponte novamente para a foto.';
       video.pause();
