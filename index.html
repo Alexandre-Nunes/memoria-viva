@@ -106,6 +106,33 @@ a-scene {
   }
 }
 
+/* Correção da visualização da câmera */
+body {
+  background: transparent !important;
+  position: relative;
+  isolation: isolate;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at top,
+    #202b46 0%,
+    #0b1020 55%,
+    #070a12 100%
+  );
+  z-index: -3;
+  pointer-events: none;
+}
+
+#arjs-video {
+  z-index: -2 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
   </style>
 </head>
 <body>
