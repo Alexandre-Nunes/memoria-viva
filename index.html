@@ -19,6 +19,93 @@
     .status { max-width: 650px; margin: 12px auto; padding: 0 18px; text-align: center; font-size: .92rem; color: #ddd; }
     .note { max-width: 650px; margin: 0 auto; padding: 0 18px 24px; color: #aaa; font-size: .78rem; text-align: center; }
     .pill { display: inline-block; margin-top: 10px; border: 1px solid #555; border-radius: 999px; padding: 6px 11px; font-size: .78rem; color: #ddd; }
+    
+/* Visual moderno do Memória Viva */
+body {
+  background: radial-gradient(ellipse at top, #202b46 0%, #0b1020 55%, #070a12 100%);
+  color: #f8fafc;
+  min-height: 100vh;
+}
+
+header {
+  padding: 28px 20px 18px;
+}
+
+.brand {
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  background: linear-gradient(90deg, #ffffff, #8be9fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  color: #b8c7df;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+.pill {
+  border: 1px solid #405574;
+  background: rgba(77, 130, 190, 0.12);
+  color: #a9e8ff;
+  padding: 7px 13px;
+}
+
+.instructions {
+  color: #dce7f8;
+  padding: 4px 22px 20px;
+  line-height: 1.6;
+}
+
+.stage {
+  width: calc(100% - 28px);
+  max-width: 760px;
+  height: min(62vh, 620px);
+  min-height: 330px;
+  margin: 0 auto;
+  border: 1px solid #354664;
+  border-radius: 22px;
+  background: #101827;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.35);
+}
+
+a-scene {
+  border-radius: 22px;
+}
+
+.status {
+  margin: 18px auto 12px;
+  padding: 12px 18px;
+  color: #a9e8ff;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.note {
+  color: #8796b0;
+  padding-bottom: 28px;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  header {
+    padding-top: 24px;
+  }
+
+  .stage {
+    width: calc(100% - 20px);
+    min-height: 300px;
+    border-radius: 18px;
+  }
+
+  a-scene {
+    border-radius: 18px;
+  }
+}
+
   </style>
 </head>
 <body>
