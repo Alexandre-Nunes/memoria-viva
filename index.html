@@ -4,9 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#000000">
-
   <title>Memória Viva</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -23,50 +21,56 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: transparent;
+      background: #000;
       font-family: Arial, sans-serif;
     }
 
-   a-scene {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent !important;
-}
+    /* A câmera precisa continuar visível por trás do canvas 3D. */
+    a-scene {
+      position: fixed !important;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent !important;
+    }
 
-a-scene canvas {
-  background: transparent !important;
-}
+    a-scene canvas {
+      position: absolute !important;
+      inset: 0;
+      width: 100% !important;
+      height: 100% !important;
+      background: transparent !important;
+    }
 
-    /* O vídeo não pode aparecer como um segundo elemento HTML. */
+    /* Vídeo-fonte: não deve aparecer como elemento visual na página. */
     #memoryVideo {
       position: fixed;
-      width: 1px;
-      height: 1px;
-      left: -10px;
+      left: 0;
       top: 0;
+      width: 2px;
+      height: 2px;
       opacity: 0;
       pointer-events: none;
+      border: 0;
     }
 
     #painel {
       position: fixed;
       z-index: 1000;
-      top: env(safe-area-inset-top, 12px);
+      top: calc(env(safe-area-inset-top, 0px) + 12px);
       left: 12px;
       right: 12px;
       padding: 14px;
       border-radius: 12px;
       background: rgba(0, 0, 0, 0.82);
-      color: white;
+      color: #fff;
       text-align: center;
     }
 
     #titulo {
+      margin-bottom: 7px;
       font-size: 20px;
       font-weight: bold;
-      margin-bottom: 7px;
     }
 
     #status {
@@ -76,18 +80,18 @@ a-scene canvas {
 
     #acoes {
       display: none;
-      margin-top: 12px;
-      gap: 8px;
       flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     button {
       width: 100%;
       min-height: 46px;
+      padding: 12px;
       border: 0;
       border-radius: 9px;
-      padding: 12px;
-      background: white;
+      background: #fff;
       color: #111;
       font-size: 16px;
       font-weight: bold;
@@ -102,9 +106,9 @@ a-scene canvas {
     #diagnostico {
       display: none;
       margin-top: 10px;
+      color: #ffd7d7;
       font-size: 12px;
       line-height: 1.4;
-      color: #ffd7d7;
       overflow-wrap: anywhere;
     }
   </style>
@@ -114,18 +118,26 @@ a-scene canvas {
 
   <div id="painel">
     <div id="titulo">Memória Viva</div>
-    <div id="status">Preparando a realidade aumentada...</div>
+    <div id="status">Iniciando a realidade aumentada...</div>
 
     <div id="acoes">
       <button id="btnReproduzir">▶ Reproduzir lembrança</button>
-      <button id="btnSom" style="display:none;">🔊 Ativar som</button>
-      <button id="btnTentarNovamente" style="display:none;">
-        Tentar carregar novamente
-      </button>
+      <button id="btnSom" style="display:none">🔊 Ativar som</button>
+      <button id="btnTentar" style="display:none">Tentar novamente</button>
     </div>
 
     <div id="diagnostico"></div>
   </div>
+
+  <!-- Fonte do vídeo fora da cena 3D: não cria uma segunda exibição. -->
+  <video
+    id="memoryVideo"
+    playsinline
+    webkit-playsinline
+    muted
+    loop
+    preload="none"
+  ></video>
 
   <a-scene
     mindar-image="
@@ -136,24 +148,11 @@ a-scene canvas {
       uiError: yes;
     "
     color-space="sRGB"
-    renderer="colorManagement: true; alpha: true; antialias: true"
+    renderer="colorManagement: true, alpha: true, antialias: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded
   >
-
-    <a-assets>
-      <!-- Único elemento de vídeo; sem endereço até a foto ser reconhecida. -->
-      <video
-        id="memoryVideo"
-        playsinline
-        webkit-playsinline
-        muted
-        loop
-        preload="none"
-      ></video>
-    </a-assets>
-
     <a-camera
       position="0 0 0"
       look-controls="enabled: false"
@@ -169,12 +168,10 @@ a-scene canvas {
         width="1"
         height="0.5625"
         position="0 0 0.02"
-        rotation="0 0 0"
         material="shader: flat; side: double"
         visible="false"
       ></a-video>
     </a-entity>
-
   </a-scene>
 
   <script>
@@ -182,6 +179,7 @@ a-scene canvas {
       const video = document.getElementById('memoryVideo');
       const alvo = document.getElementById('alvo');
       const plano = document.getElementById('videoPlane');
+      const cena = document.querySelector('a-scene');
 
       const status = document.getElementById('status');
       const acoes = document.getElementById('acoes');
@@ -189,101 +187,83 @@ a-scene canvas {
 
       const btnReproduzir = document.getElementById('btnReproduzir');
       const btnSom = document.getElementById('btnSom');
-      const btnTentar = document.getElementById('btnTentarNovamente');
+      const btnTentar = document.getElementById('btnTentar');
 
       let alvoVisivel = false;
-      let carregamentoSolicitado = false;
+      let carregando = false;
+      let videoPronto = false;
 
-      function mostrarStatus(mensagem) {
+      function informar(mensagem) {
         status.textContent = mensagem;
       }
 
-      function mostrarErro(mensagem) {
+      function erro(mensagem) {
         diagnostico.textContent = mensagem;
         diagnostico.style.display = 'block';
       }
 
-      function esconderErro() {
+      function limparErro() {
         diagnostico.textContent = '';
         diagnostico.style.display = 'none';
       }
 
       function carregarVideo() {
-        if (!alvoVisivel || carregamentoSolicitado) return;
+        if (carregando || videoPronto) return;
 
-        carregamentoSolicitado = true;
-        esconderErro();
-        mostrarStatus('Carregando o vídeo da lembrança...');
+        carregando = true;
+        limparErro();
+        informar('Carregando o vídeo...');
 
         video.src = new URL(
           './memoria.mp4.mp4',
-          window.location.href
+          document.baseURI
         ).href;
 
         video.load();
       }
 
-      video.addEventListener('loadeddata', () => {
-        if (!alvoVisivel) return;
-
-        mostrarStatus('Vídeo carregado. Toque em Reproduzir lembrança.');
-      });
-
-      video.addEventListener('canplay', () => {
-        if (alvoVisivel && video.paused) {
-          mostrarStatus('Pronto! Toque em Reproduzir lembrança.');
-        }
-      });
-
-      video.addEventListener('playing', () => {
-        esconderErro();
-
-        if (alvoVisivel) {
-          mostrarStatus('Lembrança reproduzindo!');
-          btnReproduzir.textContent = '▶ Reiniciar lembrança';
-          btnSom.style.display = video.muted ? 'block' : 'none';
-        }
-      });
-
-      video.addEventListener('error', () => {
-        carregamentoSolicitado = false;
+      function falhaVideo() {
+        carregando = false;
+        videoPronto = false;
 
         if (!alvoVisivel) return;
 
-        let detalhe = 'Erro desconhecido ao carregar o vídeo.';
-
-        if (video.error) {
-          switch (video.error.code) {
-            case 1:
-              detalhe = 'O carregamento foi interrompido.';
-              break;
-            case 2:
-              detalhe = 'Falha de rede ao baixar o vídeo.';
-              break;
-            case 3:
-              detalhe = 'O navegador não conseguiu decodificar o vídeo.';
-              break;
-            case 4:
-              detalhe = 'Formato ou endereço do vídeo não reconhecido.';
-              break;
-          }
-        }
-
-        mostrarStatus('Falha ao carregar o vídeo.');
-        mostrarErro(
-          detalhe + ' Arquivo esperado: memoria.mp4.mp4'
+        informar('Não foi possível carregar o vídeo.');
+        erro(
+          'Confira se o arquivo memoria.mp4.mp4 existe na raiz do GitHub Pages.'
         );
         btnTentar.style.display = 'block';
+      }
+
+      video.addEventListener('canplay', () => {
+        carregando = false;
+        videoPronto = true;
+        btnTentar.style.display = 'none';
+
+        if (alvoVisivel && video.paused) {
+          informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+        }
+      });
+
+      video.addEventListener('error', falhaVideo);
+
+      video.addEventListener('playing', () => {
+        if (!alvoVisivel) return;
+
+        limparErro();
+        informar('Lembrança reproduzindo!');
+        btnReproduzir.textContent = '▶ Reiniciar lembrança';
+        btnSom.style.display = video.muted ? 'block' : 'none';
       });
 
       alvo.addEventListener('targetFound', () => {
         alvoVisivel = true;
         acoes.style.display = 'flex';
+        plano.setAttribute('visible', false);
         btnReproduzir.disabled = false;
         btnReproduzir.textContent = '▶ Reproduzir lembrança';
-        esconderErro();
 
-        mostrarStatus('Foto reconhecida! Preparando o vídeo...');
+        informar('Foto reconhecida! Preparando o vídeo.');
         carregarVideo();
       });
 
@@ -291,92 +271,81 @@ a-scene canvas {
         alvoVisivel = false;
         acoes.style.display = 'none';
         plano.setAttribute('visible', false);
+        btnSom.style.display = 'none';
 
         video.pause();
-        btnSom.style.display = 'none';
-        btnTentar.style.display = 'none';
 
-        mostrarStatus('Foto fora de visão. Aponte novamente para a foto.');
+        informar('Foto fora de visão. Aponte novamente para a foto.');
       });
 
-      function aguardarVideo() {
+      function esperarVideo() {
+        if (video.readyState >= 3) return Promise.resolve();
+
         return new Promise((resolve, reject) => {
-          if (video.readyState >= 2) {
-            resolve();
-            return;
-          }
-
           let finalizado = false;
-
-          const limpar = () => {
-            clearTimeout(temporizador);
-            video.removeEventListener('canplay', pronto);
-            video.removeEventListener('error', falhou);
-          };
 
           const concluir = (funcao, valor) => {
             if (finalizado) return;
             finalizado = true;
-            limpar();
+            clearTimeout(temporizador);
+            video.removeEventListener('canplay', pronto);
+            video.removeEventListener('error', falhou);
             funcao(valor);
           };
 
           const pronto = () => concluir(resolve);
           const falhou = () => concluir(
             reject,
-            new Error('O navegador não conseguiu carregar os dados do vídeo.')
+            new Error('Falha ao carregar ou decodificar o vídeo.')
           );
 
           const temporizador = setTimeout(() => {
             concluir(
               reject,
-              new Error('O vídeo demorou mais de 15 segundos para carregar.')
+              new Error('O vídeo demorou para carregar. Tente novamente.')
             );
-          }, 15000);
+          }, 20000);
 
           video.addEventListener('canplay', pronto);
           video.addEventListener('error', falhou);
+
+          if (video.readyState >= 3) pronto();
         });
       }
 
       async function reproduzir() {
+        if (!alvoVisivel) {
+          informar('Aponte a câmera para a foto primeiro.');
+          return;
+        }
+
         btnReproduzir.disabled = true;
-        esconderErro();
+        limparErro();
 
         try {
-          if (!video.src) {
-            carregarVideo();
+          carregarVideo();
+
+          if (video.readyState < 3) {
+            informar('Aguardando o vídeo carregar...');
+            await esperarVideo();
           }
 
-          if (video.readyState < 2) {
-            mostrarStatus('Aguardando o vídeo carregar...');
-            await aguardarVideo();
-          }
+          if (!alvoVisivel) return;
 
           video.muted = true;
-
           await video.play();
 
-          // Mostra somente a superfície 3D quando a reprodução começou.
+          // Exibe a superfície 3D somente após iniciar a reprodução.
           plano.setAttribute('visible', true);
 
-          const material = plano.components &&
-            plano.components.material &&
-            plano.components.material.material;
-
-          if (material && material.map) {
-            material.map.needsUpdate = true;
-          }
-
-          mostrarStatus('Lembrança reproduzindo!');
-          btnReproduzir.textContent = '▶ Reiniciar lembrança';
           btnSom.style.display = 'block';
           btnTentar.style.display = 'none';
+          informar('Lembrança reproduzindo!');
 
-        } catch (erro) {
+        } catch (e) {
           plano.setAttribute('visible', false);
-          mostrarStatus('Não foi possível reproduzir o vídeo.');
-          mostrarErro(erro.message || 'Erro ao iniciar a reprodução.');
+          informar('Não foi possível reproduzir o vídeo.');
+          erro(e.message || 'Verifique o arquivo e tente novamente.');
           btnTentar.style.display = 'block';
         } finally {
           btnReproduzir.disabled = false;
@@ -385,7 +354,7 @@ a-scene canvas {
 
       btnReproduzir.addEventListener('click', async () => {
         if (!alvoVisivel) {
-          mostrarStatus('Aponte a câmera para a foto primeiro.');
+          informar('Aponte a câmera para a foto primeiro.');
           return;
         }
 
@@ -402,35 +371,45 @@ a-scene canvas {
           video.muted = false;
           await video.play();
           btnSom.style.display = 'none';
-          mostrarStatus('Lembrança reproduzindo com som!');
-        } catch (erro) {
+          informar('Lembrança reproduzindo com som!');
+        } catch (e) {
           video.muted = true;
-          mostrarStatus('Não foi possível ativar o som.');
-          mostrarErro(erro.message || 'O navegador bloqueou o áudio.');
+          informar('Não foi possível ativar o som.');
+          erro('Toque novamente para tentar ativar o áudio.');
         }
       });
 
       btnTentar.addEventListener('click', async () => {
-        carregamentoSolicitado = false;
-        esconderErro();
-
+        limparErro();
         video.pause();
         video.removeAttribute('src');
         video.load();
 
+        carregando = false;
+        videoPronto = false;
+
         carregarVideo();
 
         if (alvoVisivel) {
-          await reproduzir();
+          try {
+            await esperarVideo();
+          } catch (e) {
+            falhaVideo();
+          }
         }
       });
 
-      document.querySelector('a-scene').addEventListener('loaded', () => {
-        mostrarStatus('Câmera preparada. Aponte para a foto do fotolivro.');
+      cena.addEventListener('loaded', () => {
+        informar('Inicializando câmera. Permita o acesso se solicitado.');
       });
 
-      document.querySelector('a-scene').addEventListener('arReady', () => {
-        mostrarStatus('Câmera pronta. Aponte para a foto do fotolivro.');
+      cena.addEventListener('arReady', () => {
+        informar('Câmera pronta. Aponte para a foto do fotolivro.');
+      });
+
+      cena.addEventListener('arError', () => {
+        informar('Não foi possível iniciar a câmera.');
+        erro('Confira a permissão da câmera no navegador e tente novamente.');
       });
     })();
   </script>
