@@ -262,21 +262,34 @@
       }
     });
 
-    soundButton.addEventListener('click', async () => {
-      if (!targetVisible) return;
+    
+soundButton.addEventListener('click', async () => {
+  if (!targetVisible) return;
 
-      try {
-        video.muted = false;
-        await video.play();
-        soundButton.hidden = true;
-        status.textContent = 'Sua lembrança está sendo reproduzida com som.';
-      } catch (error) {
-        video.muted = true;
-        status.textContent =
-          'Não foi possível ativar o som. Toque novamente para tentar.';
-        console.error('Erro ao ativar áudio:', error);
-      }
-    });
+  try {
+    video.pause();
+    video.muted = false;
+    video.defaultMuted = false;
+    video.volume = 1;
+
+    await video.play();
+
+    soundButton.textContent = '🔊 Som ativado';
+    status.textContent = 'Áudio ativado! Aproveite sua lembrança.';
+    soundButton.hidden = true;
+
+  } catch (error) {
+    video.muted = true;
+    soundButton.hidden = false;
+    soundButton.textContent = '🔊 Tentar ativar som novamente';
+
+    status.textContent =
+      'Não foi possível ativar o áudio. Verifique o volume do celular e tente novamente.';
+
+    console.error('Erro ao ativar áudio:', error);
+  }
+});
+
 
     target.addEventListener('targetLost', () => {
       targetVisible = false;
