@@ -27,13 +27,17 @@
       font-family: Arial, sans-serif;
     }
 
-    a-scene {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      background: transparent !important;
-    }
+   a-scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+}
+
+a-scene canvas {
+  background: transparent !important;
+}
 
     /* O vídeo não pode aparecer como um segundo elemento HTML. */
     #memoryVideo {
@@ -132,7 +136,7 @@
       uiError: yes;
     "
     color-space="sRGB"
-    renderer="colorManagement: true, alpha: true"
+    renderer="colorManagement: true; alpha: true; antialias: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded
