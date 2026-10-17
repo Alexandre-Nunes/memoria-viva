@@ -123,17 +123,15 @@
   </div>
 
   <!-- Elemento de vídeo utilizado pela textura 3D -->
-  <video
-    id="memoryVideo"
-    playsinline
-    webkit-playsinline
-    muted
-    loop
-    preload="metadata"
-    crossorigin="anonymous"
-  >
-    <source src="./memoria.mp4.mp4" type="video/mp4">
-  </video>
+<video
+  id="memoryVideo"
+  playsinline
+  webkit-playsinline
+  muted
+  loop
+  preload="none"
+  crossorigin="anonymous"
+></video>
 
   <a-scene
     mindar-image="
@@ -217,28 +215,20 @@
         texturaConfigurada = true;
       }
 
-      function carregarVideo() {
-        if (carregamentoSolicitado) return;
+     function carregarVideo() {
+  if (!alvoVisivel || carregamentoSolicitado) return;
 
-        carregamentoSolicitado = true;
-        esconderErro();
-        mostrarStatus('Carregando o vídeo da lembrança...');
-        btnTentar.style.display = 'none';
+  carregamentoSolicitado = true;
+  esconderErro();
+  mostrarStatus('Carregando o vídeo da lembrança...');
 
-        try {
-          video.load();
-        } catch (erro) {
-          carregamentoSolicitado = false;
-          mostrarErro('Não foi possível iniciar o carregamento: ' + erro.message);
-          btnTentar.style.display = 'block';
-        }
-      }
+  video.src = new URL(
+    './memoria.mp4.mp4',
+    window.location.href
+  ).href;
 
-      video.addEventListener('loadstart', () => {
-        if (alvoVisivel) {
-          mostrarStatus('Conectando ao arquivo de vídeo...');
-        }
-      });
+  video.load();
+}
 
       video.addEventListener('loadedmetadata', () => {
         configurarTextura();
