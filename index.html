@@ -17,8 +17,7 @@
       box-sizing: border-box;
     }
 
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -28,31 +27,23 @@
       font-family: Arial, sans-serif;
     }
 
-    body {
-      position: relative;
-    }
-
     a-scene {
-      position: fixed !important;
+      position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       background: transparent !important;
     }
 
-    /*
-      O vídeo existe somente como fonte da textura 3D.
-      Não deve aparecer como um segundo vídeo na página.
-    */
+    /* O vídeo não pode aparecer como um segundo elemento HTML. */
     #memoryVideo {
-      position: fixed !important;
-      width: 2px !important;
-      height: 2px !important;
-      left: -20px !important;
-      top: 0 !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      z-index: -1 !important;
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      left: -10px;
+      top: 0;
+      opacity: 0;
+      pointer-events: none;
     }
 
     #painel {
@@ -92,7 +83,7 @@
       border: 0;
       border-radius: 9px;
       padding: 12px;
-      background: #fff;
+      background: white;
       color: #111;
       font-size: 16px;
       font-weight: bold;
@@ -132,16 +123,6 @@
     <div id="diagnostico"></div>
   </div>
 
-  <!-- Fonte do vídeo: não exibir diretamente na página -->
-  <video
-    id="memoryVideo"
-    playsinline
-    webkit-playsinline
-    muted
-    loop
-    preload="none"
-  ></video>
-
   <a-scene
     mindar-image="
       imageTargetSrc: ./targets.mind;
@@ -150,28 +131,43 @@
       uiScanning: yes;
       uiError: yes;
     "
-    renderer="colorManagement: true; alpha: true"
+    color-space="sRGB"
+    renderer="colorManagement: true, alpha: true"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded
   >
 
-    <a-assets timeout="20000"></a-assets>
+    <a-assets>
+      <!-- Único elemento de vídeo; sem endereço até a foto ser reconhecida. -->
+      <video
+        id="memoryVideo"
+        playsinline
+        webkit-playsinline
+        muted
+        loop
+        preload="none"
+      ></video>
+    </a-assets>
 
     <a-camera
       position="0 0 0"
       look-controls="enabled: false"
-      wasd-controls="enabled: false"
     ></a-camera>
 
-    <a-entity id="alvo" mindar-image-target="targetIndex: 0">
+    <a-entity
+      id="alvo"
+      mindar-image-target="targetIndex: 0"
+    >
       <a-video
         id="videoPlane"
+        src="#memoryVideo"
         width="1"
         height="0.5625"
         position="0 0 0.02"
         rotation="0 0 0"
-        material="shader: flat; side: double; transparent: false"
+        material="shader: flat; side: double"
+        visible="false"
       ></a-video>
     </a-entity>
 
@@ -199,21 +195,13 @@
       }
 
       function mostrarErro(mensagem) {
-        diagnostico.style.display = 'block';
         diagnostico.textContent = mensagem;
+        diagnostico.style.display = 'block';
       }
 
       function esconderErro() {
-        diagnostico.style.display = 'none';
         diagnostico.textContent = '';
-      }
-
-      function configurarTextura() {
-        plano.setAttribute('material', {
-          shader: 'flat',
-          src: '#memoryVideo',
-          side: 'double'
-        });
+        diagnostico.style.display = 'none';
       }
 
       function carregarVideo() {
@@ -229,29 +217,21 @@
         ).href;
 
         video.load();
-        configurarTextura();
       }
 
-      video.addEventListener('loadedmetadata', () => {
-        configurarTextura();
+      video.addEventListener('loadeddata', () => {
+        if (!alvoVisivel) return;
 
-        if (alvoVisivel) {
-          mostrarStatus('Vídeo encontrado. Toque em Reproduzir lembrança.');
-        }
+        mostrarStatus('Vídeo carregado. Toque em Reproduzir lembrança.');
       });
 
-      video.addEventListener('loadeddata', configurarTextura);
-
       video.addEventListener('canplay', () => {
-        configurarTextura();
-
         if (alvoVisivel && video.paused) {
           mostrarStatus('Pronto! Toque em Reproduzir lembrança.');
         }
       });
 
       video.addEventListener('playing', () => {
-        configurarTextura();
         esconderErro();
 
         if (alvoVisivel) {
@@ -271,13 +251,13 @@
         if (video.error) {
           switch (video.error.code) {
             case 1:
-              detalhe = 'O carregamento do vídeo foi interrompido.';
+              detalhe = 'O carregamento foi interrompido.';
               break;
             case 2:
-              detalhe = 'Falha de rede ao carregar o arquivo.';
+              detalhe = 'Falha de rede ao baixar o vídeo.';
               break;
             case 3:
-              detalhe = 'O Safari não conseguiu decodificar o vídeo.';
+              detalhe = 'O navegador não conseguiu decodificar o vídeo.';
               break;
             case 4:
               detalhe = 'Formato ou endereço do vídeo não reconhecido.';
@@ -295,24 +275,18 @@
       alvo.addEventListener('targetFound', () => {
         alvoVisivel = true;
         acoes.style.display = 'flex';
-        btnReproduzir.style.display = 'block';
         btnReproduzir.disabled = false;
         btnReproduzir.textContent = '▶ Reproduzir lembrança';
-
         esconderErro();
-        configurarTextura();
 
-        if (video.readyState >= 2) {
-          mostrarStatus('Foto reconhecida! Toque em Reproduzir lembrança.');
-        } else {
-          mostrarStatus('Foto reconhecida! Preparando o vídeo...');
-          carregarVideo();
-        }
+        mostrarStatus('Foto reconhecida! Preparando o vídeo...');
+        carregarVideo();
       });
 
       alvo.addEventListener('targetLost', () => {
         alvoVisivel = false;
         acoes.style.display = 'none';
+        plano.setAttribute('visible', false);
 
         video.pause();
         btnSom.style.display = 'none';
@@ -321,10 +295,49 @@
         mostrarStatus('Foto fora de visão. Aponte novamente para a foto.');
       });
 
+      function aguardarVideo() {
+        return new Promise((resolve, reject) => {
+          if (video.readyState >= 2) {
+            resolve();
+            return;
+          }
+
+          let finalizado = false;
+
+          const limpar = () => {
+            clearTimeout(temporizador);
+            video.removeEventListener('canplay', pronto);
+            video.removeEventListener('error', falhou);
+          };
+
+          const concluir = (funcao, valor) => {
+            if (finalizado) return;
+            finalizado = true;
+            limpar();
+            funcao(valor);
+          };
+
+          const pronto = () => concluir(resolve);
+          const falhou = () => concluir(
+            reject,
+            new Error('O navegador não conseguiu carregar os dados do vídeo.')
+          );
+
+          const temporizador = setTimeout(() => {
+            concluir(
+              reject,
+              new Error('O vídeo demorou mais de 15 segundos para carregar.')
+            );
+          }, 15000);
+
+          video.addEventListener('canplay', pronto);
+          video.addEventListener('error', falhou);
+        });
+      }
+
       async function reproduzir() {
-        esconderErro();
         btnReproduzir.disabled = true;
-        mostrarStatus('Iniciando reprodução...');
+        esconderErro();
 
         try {
           if (!video.src) {
@@ -332,41 +345,16 @@
           }
 
           if (video.readyState < 2) {
-            await new Promise((resolve, reject) => {
-              let finalizado = false;
-
-              const concluir = (funcao, valor) => {
-                if (finalizado) return;
-                finalizado = true;
-                clearTimeout(temporizador);
-                video.removeEventListener('canplay', aoPronto);
-                video.removeEventListener('error', aoErro);
-                funcao(valor);
-              };
-
-              const aoPronto = () => concluir(resolve);
-              const aoErro = () => concluir(
-                reject,
-                new Error('O navegador não conseguiu carregar o vídeo.')
-              );
-
-              const temporizador = setTimeout(() => {
-                concluir(
-                  reject,
-                  new Error('O vídeo demorou demais para carregar.')
-                );
-              }, 15000);
-
-              video.addEventListener('canplay', aoPronto, { once: true });
-              video.addEventListener('error', aoErro, { once: true });
-
-              if (video.readyState >= 3) aoPronto();
-            });
+            mostrarStatus('Aguardando o vídeo carregar...');
+            await aguardarVideo();
           }
 
           video.muted = true;
-          configurarTextura();
+
           await video.play();
+
+          // Mostra somente a superfície 3D quando a reprodução começou.
+          plano.setAttribute('visible', true);
 
           const material = plano.components &&
             plano.components.material &&
@@ -382,11 +370,9 @@
           btnTentar.style.display = 'none';
 
         } catch (erro) {
-          mostrarStatus('Não foi possível iniciar o vídeo.');
-          mostrarErro(
-            (erro.message || 'Erro sem detalhes.') +
-            ' Confira se o arquivo memoria.mp4.mp4 está na raiz do GitHub.'
-          );
+          plano.setAttribute('visible', false);
+          mostrarStatus('Não foi possível reproduzir o vídeo.');
+          mostrarErro(erro.message || 'Erro ao iniciar a reprodução.');
           btnTentar.style.display = 'block';
         } finally {
           btnReproduzir.disabled = false;
@@ -416,7 +402,7 @@
         } catch (erro) {
           video.muted = true;
           mostrarStatus('Não foi possível ativar o som.');
-          mostrarErro(erro.message || 'O Safari bloqueou o áudio.');
+          mostrarErro(erro.message || 'O navegador bloqueou o áudio.');
         }
       });
 
@@ -435,13 +421,11 @@
         }
       });
 
-      const cena = document.querySelector('a-scene');
-
-      cena.addEventListener('loaded', () => {
+      document.querySelector('a-scene').addEventListener('loaded', () => {
         mostrarStatus('Câmera preparada. Aponte para a foto do fotolivro.');
       });
 
-      cena.addEventListener('arReady', () => {
+      document.querySelector('a-scene').addEventListener('arReady', () => {
         mostrarStatus('Câmera pronta. Aponte para a foto do fotolivro.');
       });
     })();
