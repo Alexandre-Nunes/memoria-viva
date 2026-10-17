@@ -1,14 +1,112 @@
-lo celular.'; }
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memória Viva</title>
+
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #status {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 10;
+      padding: 12px;
+      text-align: center;
+      color: white;
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 8px;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="status">Carregando Memória Viva...</div>
+
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
+    embedded
+    color-space="sRGB"
+    renderer="colorManagement: true, physicallyCorrectLights"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <video
+        id="memoryVideo"
+        src="./memoria.mp4.mp4"
+        preload="auto"
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous">
+      </video>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" id="photoTarget">
+      <a-video
+        src="#memoryVideo"
+        position="0 0 0"
+        width="1"
+        height="0.5625">
+      </a-video>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    const target = document.querySelector('#photoTarget');
+    const video = document.querySelector('#memoryVideo');
+    const status = document.querySelector('#status');
+    const scene = document.querySelector('a-scene');
+
+    // Inicia o carregamento do vídeo assim que a página abre.
+    video.load();
+
+    video.addEventListener('canplay', () => {
+      console.log('Vídeo pronto para reprodução.');
     });
+
+    target.addEventListener('targetFound', async () => {
+      status.textContent = 'Foto reconhecida! Iniciando sua lembrança...';
+
+      try {
+        // Tenta reproduzir assim que a foto é reconhecida.
+        await video.play();
+
+        status.textContent = 'Sua lembrança está sendo reproduzida!';
+      } catch (error) {
+        console.error('Não foi possível iniciar o vídeo automaticamente:', error);
+
+        status.textContent =
+          'Foto reconhecida! Toque na tela para iniciar o vídeo.';
+      }
+    });
+
     target.addEventListener('targetLost', () => {
       status.textContent = 'Foto fora de visão. Aponte novamente para a foto.';
       video.pause();
     });
-    document.querySelector('a-scene').addEventListener('arReady', () => {
+
+    scene.addEventListener('arReady', () => {
       status.textContent = 'Câmera pronta. Aponte para a foto cadastrada.';
     });
-    document.querySelector('a-scene').addEventListener('arError', () => {
-      status.textContent = 'Não foi possível iniciar a câmera. Confira a permissão e abra o site por HTTPS.';
+
+    scene.addEventListener('arError', () => {
+      status.textContent =
+        'Não foi possível iniciar a câmera. Confira a permissão e abra o site por HTTPS.';
     });
   </script>
 </body>
