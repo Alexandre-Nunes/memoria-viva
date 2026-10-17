@@ -1,0 +1,62 @@
+# Memória Viva — protótipo inicial
+
+Este é um ponto de partida para testar a ideia de reconhecer uma foto impressa e posicionar um vídeo sobre ela.
+
+## O que já está preparado
+- Página responsiva para Android e iPhone.
+- Uso da câmera pelo navegador.
+- Reconhecimento de imagem usando MindAR.
+- Vídeo associado ao primeiro alvo reconhecido.
+- Mensagens de estado para o usuário.
+
+## O que você precisa adicionar
+1. Um vídeo de teste chamado `memoria.mp4` dentro de `assets/`.
+2. Uma foto de referência (JPG/PNG) para ser reconhecida.
+3. Gerar o arquivo `targets/targets.mind` usando o compilador de imagem do MindAR.
+
+## Gerar o alvo de reconhecimento
+1. Abra o Image Target Compiler do MindAR: https://hiukim.github.io/mind-ar-js-doc/tools/compile
+2. Envie a foto de referência escolhida.
+3. Gere e baixe o arquivo `.mind`.
+4. Renomeie o arquivo para `targets.mind`.
+5. Coloque-o dentro da pasta `targets/`.
+
+Escolha uma foto com muitos detalhes visuais e bom contraste. Evite uma imagem muito lisa, com grandes áreas brancas, ou uma foto borrada.
+
+## Colocar seu vídeo
+- Coloque um vídeo MP4 em `assets/memoria.mp4`.
+- Para o primeiro teste, use um vídeo curto (5–15 segundos) e um arquivo pequeno.
+- Use somente conteúdo seu ou para o qual tenha autorização.
+
+## Como publicar gratuitamente para testar
+O acesso à câmera exige contexto seguro (HTTPS ou localhost). Uma forma simples de publicar é:
+1. Crie uma conta no GitHub.
+2. Crie um repositório público chamado `memoria-viva`.
+3. Envie todos os arquivos deste projeto para o repositório, preservando as pastas.
+4. Nas configurações do repositório, abra **Pages**.
+5. Escolha publicar a partir da branch `main`, pasta `/ (root)`.
+6. Aguarde o endereço publicado e abra-o no celular.
+
+Atenção: o GitHub Pages é adequado para o protótipo, mas limites de tamanho/uso e tráfego podem afetar vídeos maiores. Para uma demonstração rápida, mantenha o vídeo pequeno.
+
+## Teste
+- Abra a URL HTTPS no celular.
+- Permita o acesso à câmera.
+- Aponte para a mesma foto usada para gerar `targets.mind`.
+- Quando reconhecida, o vídeo deve aparecer sobre a imagem.
+
+## Limitações desta primeira versão
+- Só reconhece uma foto (targetIndex 0).
+- O vídeo aparece como uma janela retangular sobre a foto; não é ainda uma integração avançada com perspectiva/recorte.
+- Não existe cadastro de fotógrafos, login, gestão de álbuns ou armazenamento privado.
+- A reprodução automática pode ser bloqueada por alguns navegadores. Se isso ocorrer, toque na tela ou ajuste o protótipo para apresentar um botão de reprodução.
+- Não é um app nativo publicado na App Store/Google Play; é um protótipo web que pode ser aberto no navegador.
+- A biblioteca MindAR é um projeto de código aberto. Revise a licença e os requisitos atuais antes de uso comercial.
+
+## Próximas etapas após validar
+1. Adicionar botão de reprodução alternativo.
+2. Suportar várias fotos por álbum.
+3. Criar área de cadastro para fotógrafos.
+4. Adicionar armazenamento e controle de acesso para vídeos.
+5. Melhorar o posicionamento e dimensionamento do vídeo para diferentes fotos.
+6. Avaliar publicação como PWA ou aplicativo nativo.
