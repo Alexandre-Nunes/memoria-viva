@@ -258,14 +258,7 @@
         if (alvoVisivel) {
           limparErro();
 
-          if (!precisaTentarSom) {
-            informar(
-              video.muted
-                ? 'Lembrança reproduzindo sem som.'
-                : 'Lembrança reproduzindo com som!'
-            );
-
-            btnReproduzir.textContent = '▶ Reiniciar lembrança';
+                     btnReproduzir.textContent = '▶ Reiniciar lembrança';
           }
         }
       });
@@ -276,7 +269,7 @@
         plano.setAttribute('visible', false);
         btnReproduzir.disabled = false;
         btnReproduzir.textContent = '▶ Reproduzir lembrança';
-        precisaTentarSom = false;
+        precisaTentarSom = true;
 
         informar('Foto reconhecida! Preparando o vídeo.');
         carregarVideo();
@@ -287,7 +280,7 @@
         acoes.style.display = 'none';
         plano.setAttribute('visible', false);
         video.pause();
-        precisaTentarSom = false;
+        precisaTentarSom = true;
 
         informar('Foto fora de visão. Aponte novamente para a foto.');
       });
