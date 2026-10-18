@@ -11,21 +11,26 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: Arial, sans-serif;
+    * {
+      box-sizing: border-box;
     }
 
-    /* Importante: manter sem regras personalizadas de posicionamento
-       para a-scene e canvas. Essa foi a configuração que resolveu a câmera. */
+  html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
+  font-family: Arial, sans-serif;
+}
 
+    /*
+      A câmera fica abaixo da cena 3D.
+      O JavaScript também ajusta o vídeo real criado pelo MindAR.
+    */
+  
+    /* Vídeo da lembrança: não é o vídeo da câmera */
     #memoryVideo {
       position: fixed;
       left: 0;
@@ -82,7 +87,9 @@
       touch-action: manipulation;
     }
 
-    button:disabled { opacity: 0.55; }
+    button:disabled {
+      opacity: 0.55;
+    }
 
     #diagnostico {
       display: none;
@@ -96,13 +103,14 @@
 </head>
 
 <body>
-
   <div id="painel">
     <div id="titulo">Memória Viva</div>
     <div id="status">Iniciando a realidade aumentada...</div>
 
     <div id="acoes">
       <button id="btnReproduzir">▶ Reproduzir lembrança</button>
+      <button id="btnSom" style="display:none">🔊 Ativar som</button>
+      <button id="btnTentar" style="display:none">Tentar novamente</button>
     </div>
 
     <div id="diagnostico"></div>
@@ -112,6 +120,7 @@
     id="memoryVideo"
     playsinline
     webkit-playsinline
+    muted
     loop
     preload="auto"
     crossorigin="anonymous"
@@ -163,12 +172,14 @@
       const diagnostico = document.getElementById('diagnostico');
 
       const btnReproduzir = document.getElementById('btnReproduzir');
-     
+      const btnSom = document.getElementById('btnSom');
+      const btnTentar = document.getElementById('btnTentar');
+
       let alvoVisivel = false;
       let carregando = false;
       let videoPronto = false;
 
-          function informar(mensagem) {
+      function informar(mensagem) {
         status.textContent = mensagem;
       }
 
@@ -181,6 +192,63 @@
         diagnostico.textContent = '';
         diagnostico.style.display = 'none';
       }
+
+      /*
+        CORREÇÃO DA CÂMERA:
+        O MindAR cria seu próprio elemento <video>.
+        Não confundir esse elemento com #memoryVideo.
+      */
+      function ajustarCamadaCamera() {
+        if (!cena) return;
+
+        cena.style.setProperty('position', 'fixed', 'important');
+        cena.style.setProperty('inset', '0', 'important');
+        cena.style.setProperty('width', '100%', 'important');
+        cena.style.setProperty('height', '100%', 'important');
+        cena.style.setProperty('z-index', '1', 'important');
+        cena.style.setProperty('background', 'transparent', 'important');
+
+        const canvas = cena.querySelector('canvas');
+
+        if (canvas) {
+          canvas.style.setProperty('background', 'transparent', 'important');
+        }
+
+        document.querySelectorAll('video').forEach(camera => {
+          if (camera.id === 'memoryVideo') return;
+
+          camera.style.setProperty('display', 'block', 'important');
+          camera.style.setProperty('position', 'fixed', 'important');
+          camera.style.setProperty('top', '0', 'important');
+          camera.style.setProperty('left', '0', 'important');
+          camera.style.setProperty('width', '100vw', 'important');
+          camera.style.setProperty('height', '100vh', 'important');
+          camera.style.setProperty('object-fit', 'cover', 'important');
+          camera.style.setProperty('opacity', '1', 'important');
+          camera.style.setProperty('visibility', 'visible', 'important');
+          camera.style.setProperty('z-index', '0', 'important');
+          camera.style.setProperty('pointer-events', 'none', 'important');
+        });
+      }
+
+      /*
+        O observador detecta quando o MindAR adiciona
+        o vídeo da câmera à página.
+      */
+      const observador = new MutationObserver(() => {
+        ajustarCamadaCamera();
+      });
+
+      observador.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      window.addEventListener('load', ajustarCamadaCamera);
+      window.addEventListener('resize', ajustarCamadaCamera);
+
+      cena.addEventListener('loaded', ajustarCamadaCamera);
+      cena.addEventListener('arReady', ajustarCamadaCamera);
 
       function carregarVideo() {
         if (carregando || videoPronto) return;
@@ -257,9 +325,9 @@
 
         if (alvoVisivel) {
           limparErro();
-
-                     btnReproduzir.textContent = '▶ Reiniciar lembrança';
-          }
+          informar('Lembrança reproduzindo!');
+          btnReproduzir.textContent = '▶ Reiniciar lembrança';
+          btnSom.style.display = video.muted ? 'block' : 'none';
         }
       });
 
@@ -269,7 +337,6 @@
         plano.setAttribute('visible', false);
         btnReproduzir.disabled = false;
         btnReproduzir.textContent = '▶ Reproduzir lembrança';
-        precisaTentarSom = true;
 
         informar('Foto reconhecida! Preparando o vídeo.');
         carregarVideo();
@@ -279,8 +346,8 @@
         alvoVisivel = false;
         acoes.style.display = 'none';
         plano.setAttribute('visible', false);
+        btnSom.style.display = 'none';
         video.pause();
-        precisaTentarSom = true;
 
         informar('Foto fora de visão. Aponte novamente para a foto.');
       });
@@ -292,6 +359,7 @@
 
         return new Promise((resolve, reject) => {
           let finalizado = false;
+          let temporizador;
 
           const limpar = () => {
             clearTimeout(temporizador);
@@ -313,12 +381,14 @@
             }
           };
 
-          const falhou = () => concluir(
-            reject,
-            new Error('O navegador não conseguiu carregar as imagens do vídeo.')
-          );
+          const falhou = () => {
+            concluir(
+              reject,
+              new Error('O navegador não conseguiu carregar as imagens do vídeo.')
+            );
+          };
 
-          const temporizador = setTimeout(() => {
+          temporizador = setTimeout(() => {
             concluir(
               reject,
               new Error('O vídeo demorou para carregar. Tente novamente.')
@@ -349,19 +419,8 @@
 
           if (!alvoVisivel) return;
 
-          // Primeiro, tenta iniciar com som.
-          video.muted = false;
-
-          let iniciouComSom = true;
-
-          try {
-            await video.play();
-          } catch (erroSom) {
-            // Se o navegador bloquear o áudio, tenta iniciar sem som.
-            video.muted = true;
-            await video.play();
-            iniciouComSom = false;
-          }
+          video.muted = true;
+          await video.play();
 
           atualizarTextura();
 
@@ -369,15 +428,11 @@
           atualizarTextura();
 
           plano.setAttribute('visible', true);
-          btnTentar.style.display = 'none';
 
-          if (iniciouComSom) {
-            precisaTentarSom = false;
-            btnReproduzir.textContent = '▶ Reiniciar lembrança';
-            informar('Lembrança reproduzindo com som!');
-          } 
-            );
-          }
+          informar('Lembrança reproduzindo!');
+          btnReproduzir.textContent = '▶ Reiniciar lembrança';
+          btnSom.style.display = 'block';
+          btnTentar.style.display = 'none';
 
         } catch (e) {
           plano.setAttribute('visible', false);
@@ -396,38 +451,26 @@
           return;
         }
 
-        // Usa o mesmo botão para ativar o som, se necessário.
-        if (precisaTentarSom) {
-          btnReproduzir.disabled = true;
-
-          try {
-            video.muted = false;
-            await video.play();
-
-            precisaTentarSom = false;
-            btnReproduzir.textContent = '▶ Reiniciar lembrança';
-            informar('Lembrança reproduzindo com som!');
-            limparErro();
-
-          } catch (e) {
-            video.muted = true;
-            informar(
-              'O navegador bloqueou o áudio. Toque novamente para tentar.'
-            );
-
-          } finally {
-            btnReproduzir.disabled = false;
-          }
-
-          return;
-        }
-
         if (!video.paused && !video.ended) {
           video.currentTime = 0;
           return;
         }
 
         await reproduzir();
+      });
+
+      btnSom.addEventListener('click', async () => {
+        try {
+          video.muted = false;
+          await video.play();
+          btnSom.style.display = 'none';
+          informar('Lembrança reproduzindo com som!');
+
+        } catch (e) {
+          video.muted = true;
+          informar('Não foi possível ativar o som.');
+          mostrarErro('Toque novamente para tentar ativar o áudio.');
+        }
       });
 
       btnTentar.addEventListener('click', async () => {
@@ -438,9 +481,7 @@
 
         carregando = false;
         videoPronto = false;
-        precisaTentarSom = false;
 
-        btnReproduzir.textContent = '▶ Reproduzir lembrança';
         carregarVideo();
 
         try {
@@ -449,6 +490,7 @@
           if (alvoVisivel) {
             informar('Vídeo pronto! Toque em Reproduzir lembrança.');
           }
+
         } catch (e) {
           informar('Falha ao carregar o vídeo.');
           mostrarErro(e.message);
@@ -456,10 +498,12 @@
       });
 
       cena.addEventListener('loaded', () => {
+        ajustarCamadaCamera();
         informar('Inicializando câmera. Permita o acesso se solicitado.');
       });
 
       cena.addEventListener('arReady', () => {
+        ajustarCamadaCamera();
         informar('Câmera pronta. Aponte para a foto do fotolivro.');
       });
 
@@ -467,8 +511,9 @@
         informar('Não foi possível iniciar a câmera.');
         mostrarErro('Confira a permissão da câmera no navegador.');
       });
+
+      ajustarCamadaCamera();
     })();
   </script>
-
 </body>
 </html>
