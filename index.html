@@ -13,15 +13,15 @@
   <style>
     * { box-sizing: border-box; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: Arial, sans-serif;
-    }
+   html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: Arial, sans-serif;
+}
 
     a-scene {
       position: fixed !important;
@@ -105,6 +105,18 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
+    /* Mantém a imagem real da câmera visível no fundo */
+html,
+body,
+a-scene,
+a-scene .a-canvas {
+  background-color: transparent !important;
+}
+
+/* Evita que o canvas cubra o vídeo da câmera */
+a-scene canvas {
+  background-color: transparent !important;
+}
   </style>
 </head>
 
