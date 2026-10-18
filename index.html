@@ -109,18 +109,15 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* TESTE TEMPORÁRIO: verificar a composição das camadas */
-html,
-body {
-  background: transparent !important;
-}
-
-a-scene {
-  background: transparent !important;
-}
-
-a-scene canvas {
-  background: transparent !important;
+ /* Correção do fundo preto da câmera */
+body > video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
 }
   </style>
 </head>
