@@ -108,20 +108,39 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* Corrige a camada real de vídeo da câmera do MindAR */
+   /* Câmera do MindAR: camada de fundo */
 video.mindar-video,
 video#mindar-video {
   display: block !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
   opacity: 1 !important;
   visibility: visible !important;
-  object-fit: cover !important;
+  z-index: 0 !important;
 }
 
-/* Mantém o canvas da realidade aumentada transparente */
-a-scene,
+/* Realidade aumentada acima da câmera */
+a-scene {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 1 !important;
+  background: transparent !important;
+}
+
 a-scene canvas {
   background: transparent !important;
 }
+
+/* Painel de instruções acima de tudo */
+#painel {
+  z-index: 1000 !important;
+}
+    
   </style>
 </head>
 
