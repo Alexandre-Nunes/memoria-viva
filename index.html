@@ -11,7 +11,9 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
@@ -23,25 +25,28 @@
       font-family: Arial, sans-serif;
     }
 
-    /* Cena original: sem interferir na camada da câmera */
+    /*
+      A câmera fica abaixo da cena 3D.
+      O JavaScript também ajusta o vídeo real criado pelo MindAR.
+    */
     a-scene {
       position: fixed !important;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 1 !important;
       background: transparent !important;
     }
 
-    /* Canvas original transparente */
     a-scene canvas {
       position: absolute !important;
-      inset: 0;
+      inset: 0 !important;
       width: 100% !important;
       height: 100% !important;
       background: transparent !important;
     }
 
-    /* Vídeo da lembrança permanece oculto fora da realidade aumentada */
+    /* Vídeo da lembrança: não é o vídeo da câmera */
     #memoryVideo {
       position: fixed;
       left: 0;
@@ -98,7 +103,9 @@
       touch-action: manipulation;
     }
 
-    button:disabled { opacity: 0.55; }
+    button:disabled {
+      opacity: 0.55;
+    }
 
     #diagnostico {
       display: none;
@@ -108,44 +115,10 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
-   /* Câmera do MindAR: camada de fundo */
-video.mindar-video,
-video#mindar-video {
-  display: block !important;
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  z-index: 0 !important;
-}
-
-/* Realidade aumentada acima da câmera */
-a-scene {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 1 !important;
-  background: transparent !important;
-}
-
-a-scene canvas {
-  background: transparent !important;
-}
-
-/* Painel de instruções acima de tudo */
-#painel {
-  z-index: 1000 !important;
-}
-    
   </style>
 </head>
 
 <body>
-
   <div id="painel">
     <div id="titulo">Memória Viva</div>
     <div id="status">Iniciando a realidade aumentada...</div>
@@ -221,7 +194,6 @@ a-scene canvas {
       let alvoVisivel = false;
       let carregando = false;
       let videoPronto = false;
-      let texturaPronta = false;
 
       function informar(mensagem) {
         status.textContent = mensagem;
@@ -236,6 +208,63 @@ a-scene canvas {
         diagnostico.textContent = '';
         diagnostico.style.display = 'none';
       }
+
+      /*
+        CORREÇÃO DA CÂMERA:
+        O MindAR cria seu próprio elemento <video>.
+        Não confundir esse elemento com #memoryVideo.
+      */
+      function ajustarCamadaCamera() {
+        if (!cena) return;
+
+        cena.style.setProperty('position', 'fixed', 'important');
+        cena.style.setProperty('inset', '0', 'important');
+        cena.style.setProperty('width', '100%', 'important');
+        cena.style.setProperty('height', '100%', 'important');
+        cena.style.setProperty('z-index', '1', 'important');
+        cena.style.setProperty('background', 'transparent', 'important');
+
+        const canvas = cena.querySelector('canvas');
+
+        if (canvas) {
+          canvas.style.setProperty('background', 'transparent', 'important');
+        }
+
+        document.querySelectorAll('video').forEach(camera => {
+          if (camera.id === 'memoryVideo') return;
+
+          camera.style.setProperty('display', 'block', 'important');
+          camera.style.setProperty('position', 'fixed', 'important');
+          camera.style.setProperty('top', '0', 'important');
+          camera.style.setProperty('left', '0', 'important');
+          camera.style.setProperty('width', '100vw', 'important');
+          camera.style.setProperty('height', '100vh', 'important');
+          camera.style.setProperty('object-fit', 'cover', 'important');
+          camera.style.setProperty('opacity', '1', 'important');
+          camera.style.setProperty('visibility', 'visible', 'important');
+          camera.style.setProperty('z-index', '0', 'important');
+          camera.style.setProperty('pointer-events', 'none', 'important');
+        });
+      }
+
+      /*
+        O observador detecta quando o MindAR adiciona
+        o vídeo da câmera à página.
+      */
+      const observador = new MutationObserver(() => {
+        ajustarCamadaCamera();
+      });
+
+      observador.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+
+      window.addEventListener('load', ajustarCamadaCamera);
+      window.addEventListener('resize', ajustarCamadaCamera);
+
+      cena.addEventListener('loaded', ajustarCamadaCamera);
+      cena.addEventListener('arReady', ajustarCamadaCamera);
 
       function carregarVideo() {
         if (carregando || videoPronto) return;
@@ -261,7 +290,6 @@ a-scene canvas {
 
           if (material.map) {
             material.map.needsUpdate = true;
-            texturaPronta = true;
           } else {
             plano.setAttribute('material', {
               shader: 'flat',
@@ -303,7 +331,7 @@ a-scene canvas {
 
         informar('Não foi possível carregar o vídeo.');
         mostrarErro(
-          'Confira se memoria.mp4.mp4 está na raiz do GitHub Pages e se o vídeo abre no Safari.'
+          'Confira se memoria.mp4.mp4 está na raiz do GitHub Pages e se o vídeo abre no navegador.'
         );
         btnTentar.style.display = 'block';
       });
@@ -347,6 +375,7 @@ a-scene canvas {
 
         return new Promise((resolve, reject) => {
           let finalizado = false;
+          let temporizador;
 
           const limpar = () => {
             clearTimeout(temporizador);
@@ -368,12 +397,14 @@ a-scene canvas {
             }
           };
 
-          const falhou = () => concluir(
-            reject,
-            new Error('O navegador não conseguiu carregar as imagens do vídeo.')
-          );
+          const falhou = () => {
+            concluir(
+              reject,
+              new Error('O navegador não conseguiu carregar as imagens do vídeo.')
+            );
+          };
 
-          const temporizador = setTimeout(() => {
+          temporizador = setTimeout(() => {
             concluir(
               reject,
               new Error('O vídeo demorou para carregar. Tente novamente.')
@@ -424,6 +455,7 @@ a-scene canvas {
           informar('Não foi possível exibir o vídeo.');
           mostrarErro(e.message || 'Verifique o arquivo de vídeo.');
           btnTentar.style.display = 'block';
+
         } finally {
           btnReproduzir.disabled = false;
         }
@@ -449,6 +481,7 @@ a-scene canvas {
           await video.play();
           btnSom.style.display = 'none';
           informar('Lembrança reproduzindo com som!');
+
         } catch (e) {
           video.muted = true;
           informar('Não foi possível ativar o som.');
@@ -464,13 +497,16 @@ a-scene canvas {
 
         carregando = false;
         videoPronto = false;
-        texturaPronta = false;
 
         carregarVideo();
 
         try {
           await esperarVideo();
-          if (alvoVisivel) informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+
+          if (alvoVisivel) {
+            informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+          }
+
         } catch (e) {
           informar('Falha ao carregar o vídeo.');
           mostrarErro(e.message);
@@ -478,10 +514,12 @@ a-scene canvas {
       });
 
       cena.addEventListener('loaded', () => {
+        ajustarCamadaCamera();
         informar('Inicializando câmera. Permita o acesso se solicitado.');
       });
 
       cena.addEventListener('arReady', () => {
+        ajustarCamadaCamera();
         informar('Câmera pronta. Aponte para a foto do fotolivro.');
       });
 
@@ -489,8 +527,9 @@ a-scene canvas {
         informar('Não foi possível iniciar a câmera.');
         mostrarErro('Confira a permissão da câmera no navegador.');
       });
+
+      ajustarCamadaCamera();
     })();
   </script>
-
 </body>
 </html>
