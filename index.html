@@ -11,34 +11,56 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-   html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
-  font-family: Arial, sans-serif;
-}
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent !important;
+      font-family: Arial, sans-serif;
+    }
 
+    /* Cena de realidade aumentada */
     a-scene {
       position: fixed !important;
       inset: 0;
       width: 100%;
       height: 100%;
       background: transparent !important;
+      z-index: 1;
     }
 
+    /* Canvas transparente sobre a câmera */
+    a-scene .a-canvas,
     a-scene canvas {
       position: absolute !important;
       inset: 0;
       width: 100% !important;
       height: 100% !important;
       background: transparent !important;
+      z-index: 2;
     }
 
+    /*
+      Vídeo da câmera criado pelo MindAR.
+      Mantém a imagem real visível no fundo.
+    */
+    video#mindar-video {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+      background: transparent !important;
+    }
+
+    /* Vídeo da lembrança, mantido oculto */
     #memoryVideo {
       position: fixed;
       left: 0;
@@ -50,6 +72,7 @@
       border: 0;
     }
 
+    /* Painel de informações */
     #painel {
       position: fixed;
       z-index: 1000;
@@ -95,7 +118,9 @@
       touch-action: manipulation;
     }
 
-    button:disabled { opacity: 0.55; }
+    button:disabled {
+      opacity: 0.55;
+    }
 
     #diagnostico {
       display: none;
@@ -105,18 +130,6 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
-    /* Mantém a imagem real da câmera visível no fundo */
-html,
-body,
-a-scene,
-a-scene .a-canvas {
-  background-color: transparent !important;
-}
-
-/* Evita que o canvas cubra o vídeo da câmera */
-a-scene canvas {
-  background-color: transparent !important;
-}
   </style>
 </head>
 
@@ -239,7 +252,6 @@ a-scene canvas {
             material.map.needsUpdate = true;
             texturaPronta = true;
           } else {
-            // Força o A-Frame a associar o vídeo como textura.
             plano.setAttribute('material', {
               shader: 'flat',
               src: '#memoryVideo',
@@ -386,7 +398,6 @@ a-scene canvas {
 
           atualizarTextura();
 
-          // Deixa o vídeo avançar um instante para atualizar a textura.
           await new Promise(resolve => requestAnimationFrame(resolve));
           atualizarTextura();
 
@@ -472,4 +483,3 @@ a-scene canvas {
 
 </body>
 </html>
-
