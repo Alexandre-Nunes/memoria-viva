@@ -103,7 +103,6 @@
 
     <div id="acoes">
       <button id="btnReproduzir">▶ Reproduzir lembrança</button>
-      <button id="btnTentar" style="display:none">Tentar novamente</button>
     </div>
 
     <div id="diagnostico"></div>
@@ -164,16 +163,12 @@
       const diagnostico = document.getElementById('diagnostico');
 
       const btnReproduzir = document.getElementById('btnReproduzir');
-      const btnTentar = document.getElementById('btnTentar');
-
+     
       let alvoVisivel = false;
       let carregando = false;
       let videoPronto = false;
 
-      // Se o navegador bloquear o som, o mesmo botão permite tentar novamente.
-      let precisaTentarSom = false;
-
-      function informar(mensagem) {
+          function informar(mensagem) {
         status.textContent = mensagem;
       }
 
