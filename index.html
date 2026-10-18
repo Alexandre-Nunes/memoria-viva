@@ -25,6 +25,14 @@
   background: transparent;
   font-family: Arial, sans-serif;
 }
+    a-scene {
+  background: transparent !important;
+}
+
+a-scene,
+a-scene canvas {
+  background-color: transparent !important;
+}
 
     /* Vídeo da lembrança, separado do vídeo da câmera */
     #memoryVideo {
@@ -129,7 +137,7 @@
       uiError: yes;
     "
     color-space="sRGB"
-    renderer="colorManagement: true, alpha: true, antialias: true"
+    renderer="colorManagement: true, alpha: true, antialias: true, logarithmicDepthBuffer: false"
     vr-mode-ui="enabled: false"
     device-orientation-permission-ui="enabled: false"
     embedded
