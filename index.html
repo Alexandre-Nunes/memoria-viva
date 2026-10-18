@@ -108,6 +108,20 @@
       line-height: 1.4;
       overflow-wrap: anywhere;
     }
+    /* Corrige a camada real de vídeo da câmera do MindAR */
+video.mindar-video,
+video#mindar-video {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  object-fit: cover !important;
+}
+
+/* Mantém o canvas da realidade aumentada transparente */
+a-scene,
+a-scene canvas {
+  background: transparent !important;
+}
   </style>
 </head>
 
