@@ -11,9 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -38,16 +36,6 @@
       background: transparent !important;
     }
 
-    body > video {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      z-index: 0;
-      pointer-events: none;
-    }
-
     #memoryVideo {
       position: fixed;
       left: 0;
@@ -59,30 +47,100 @@
       border: 0;
     }
 
+    #telaInicial {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(160deg, #101820, #253746);
+      color: #fff;
+      text-align: center;
+    }
+
+    .conteudoInicial {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .simbolo {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(216, 181, 138, 0.6);
+      border-radius: 50%;
+      color: #d8b58a;
+      font-size: 34px;
+    }
+
+    #tituloInicial {
+      margin: 0 0 14px;
+      font-size: 32px;
+      line-height: 1.2;
+      letter-spacing: 0.2px;
+    }
+
+    #textoInicial {
+      margin: 0 auto 30px;
+      max-width: 300px;
+      color: #d9e0e5;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    button {
+      width: 100%;
+      min-height: 52px;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 14px;
+      background: #d8b58a;
+      color: #182029;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #dicaInicial {
+      margin-top: 18px;
+      color: #b8c4cd;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     #painel {
       position: fixed;
       z-index: 1000;
-      top: calc(env(safe-area-inset-top, 0px) + 18px);
-      left: 16px;
-      right: 16px;
-      padding: 20px 18px;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      left: 14px;
+      right: 14px;
+      padding: 16px;
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 20px;
-      background: rgba(16, 24, 32, 0.82);
+      border-radius: 16px;
+      background: rgba(16, 24, 32, 0.84);
       color: #fff;
       text-align: center;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-      transition: opacity 0.25s ease;
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
     }
 
     #titulo {
-      margin-bottom: 8px;
-      font-size: 25px;
-      line-height: 1.2;
+      margin-bottom: 6px;
+      font-size: 21px;
       font-weight: 700;
-      letter-spacing: 0.2px;
     }
 
     #status {
@@ -94,35 +152,12 @@
     #acoes {
       display: none;
       flex-direction: column;
-      gap: 9px;
-      margin-top: 16px;
-    }
-
-    button {
-      width: 100%;
-      min-height: 48px;
-      padding: 13px 16px;
-      border: 0;
-      border-radius: 12px;
-      background: #d8b58a;
-      color: #182029;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     #btnTentar {
+      display: none;
       background: rgba(255, 255, 255, 0.12);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #fff;
@@ -130,7 +165,7 @@
 
     #diagnostico {
       display: none;
-      margin-top: 12px;
+      margin-top: 10px;
       color: #ffd7d7;
       font-size: 12px;
       line-height: 1.5;
@@ -138,33 +173,39 @@
     }
 
     @media (max-width: 360px) {
-      #painel {
-        top: calc(env(safe-area-inset-top, 0px) + 12px);
-        left: 12px;
-        right: 12px;
-        padding: 16px 14px;
-        border-radius: 16px;
-      }
-
-      #titulo {
-        font-size: 22px;
-      }
-
-      #status {
-        font-size: 13px;
-      }
+      #tituloInicial { font-size: 28px; }
+      #textoInicial { font-size: 15px; }
+      #painel { left: 10px; right: 10px; }
     }
   </style>
 </head>
 
 <body>
-  <div id="painel">
+  <div id="telaInicial">
+    <div class="conteudoInicial">
+      <div class="simbolo" aria-hidden="true">♡</div>
+      <h1 id="tituloInicial">Memória Viva</h1>
+      <p id="textoInicial">
+        Uma lembrança especial está esperando por você.
+      </p>
+
+      <button id="btnAbrirCamera">
+        Abrir câmera e encontrar minha lembrança
+      </button>
+
+      <div id="dicaInicial">
+        Permita o acesso à câmera e aponte para a foto.
+      </div>
+    </div>
+  </div>
+
+  <div id="painel" style="display:none">
     <div id="titulo">Memória Viva</div>
-    <div id="status">Uma lembrança especial está esperando por você.<br>Aponte a câmera para a foto.</div>
+    <div id="status">Preparando a câmera...</div>
 
     <div id="acoes">
       <button id="btnReproduzir">▶ Reproduzir lembrança</button>
-      <button id="btnTentar" style="display:none">Tentar novamente</button>
+      <button id="btnTentar">Tentar novamente</button>
     </div>
 
     <div id="diagnostico"></div>
@@ -182,7 +223,7 @@
   <a-scene
     mindar-image="
       imageTargetSrc: ./targets.mind;
-      autoStart: true;
+      autoStart: false;
       uiLoading: no;
       uiScanning: yes;
       uiError: yes;
@@ -219,20 +260,22 @@
       const alvo = document.getElementById('alvo');
       const plano = document.getElementById('videoPlane');
       const cena = document.querySelector('a-scene');
-      const painel = document.getElementById('painel');
 
+      const telaInicial = document.getElementById('telaInicial');
+      const btnAbrirCamera = document.getElementById('btnAbrirCamera');
+      const painel = document.getElementById('painel');
       const status = document.getElementById('status');
       const acoes = document.getElementById('acoes');
       const diagnostico = document.getElementById('diagnostico');
-
       const btnReproduzir = document.getElementById('btnReproduzir');
       const btnTentar = document.getElementById('btnTentar');
 
+      let cameraIniciada = false;
       let alvoVisivel = false;
       let carregando = false;
       let videoPronto = false;
-      let autoPlayEmAndamento = false;
-      let autoPlayTentado = false;
+      let tentandoReproduzir = false;
+      let tentativaAutomaticaFeita = false;
 
       function informar(mensagem) {
         status.textContent = mensagem;
@@ -246,10 +289,6 @@
       function limparErro() {
         diagnostico.textContent = '';
         diagnostico.style.display = 'none';
-      }
-
-      function mostrarPainel() {
-        painel.style.display = 'block';
       }
 
       function carregarVideo() {
@@ -286,20 +325,53 @@
         }
       }
 
+      async function iniciarCamera() {
+        if (cameraIniciada) return;
+
+        btnAbrirCamera.disabled = true;
+        btnAbrirCamera.textContent = 'Abrindo câmera...';
+
+        try {
+          const sistema = cena.systems['mindar-image-system'];
+
+          if (!sistema) {
+            throw new Error('O sistema de realidade aumentada não foi inicializado.');
+          }
+
+          await sistema.start();
+
+          cameraIniciada = true;
+          telaInicial.style.display = 'none';
+          painel.style.display = 'block';
+          informar('Câmera ativa. Aponte para a foto.');
+        } catch (erro) {
+          telaInicial.style.display = 'flex';
+          btnAbrirCamera.disabled = false;
+          btnAbrirCamera.textContent = 'Tentar abrir a câmera';
+
+          const mensagem = erro.name === 'NotAllowedError'
+            ? 'O acesso à câmera foi negado. Permita o uso da câmera nas configurações do navegador.'
+            : 'Não foi possível abrir a câmera. Verifique a permissão e tente novamente.';
+
+          document.getElementById('textoInicial').textContent = mensagem;
+          document.getElementById('dicaInicial').textContent =
+            'A página precisa de uma conexão segura (HTTPS) e permissão para usar a câmera.';
+        }
+      }
+
       async function tentarReproducaoAutomatica() {
         if (
           !alvoVisivel ||
           !videoPronto ||
           !video.paused ||
-          autoPlayTentado ||
-          autoPlayEmAndamento
+          tentandoReproduzir ||
+          tentativaAutomaticaFeita
         ) {
           return;
         }
 
-        autoPlayTentado = true;
-        autoPlayEmAndamento = true;
-        limparErro();
+        tentativaAutomaticaFeita = true;
+        tentandoReproduzir = true;
 
         try {
           video.muted = false;
@@ -312,24 +384,16 @@
 
           atualizarTextura();
           plano.setAttribute('visible', true);
-
-          btnReproduzir.textContent = '▶ Reiniciar lembrança';
-          informar('Lembrança reproduzindo!');
-          acoes.style.display = 'none';
-          limparErro();
-
-        } catch (e) {
+        } catch (erro) {
           if (!alvoVisivel) return;
 
-          mostrarPainel();
-          informar('Foto reconhecida! Toque para iniciar a lembrança.');
+          painel.style.display = 'block';
+          informar('Foto reconhecida! Toque para iniciar sua lembrança.');
           acoes.style.display = 'flex';
           btnReproduzir.style.display = 'block';
           btnReproduzir.disabled = false;
-          btnReproduzir.textContent = '▶ Reproduzir lembrança';
-
         } finally {
-          autoPlayEmAndamento = false;
+          tentandoReproduzir = false;
         }
       }
 
@@ -353,13 +417,23 @@
         }
       });
 
+      video.addEventListener('playing', () => {
+        atualizarTextura();
+
+        if (alvoVisivel) {
+          plano.setAttribute('visible', true);
+          painel.style.display = 'none';
+          limparErro();
+        }
+      });
+
       video.addEventListener('error', () => {
         carregando = false;
         videoPronto = false;
 
         if (!alvoVisivel) return;
 
-        mostrarPainel();
+        painel.style.display = 'block';
         informar('Não foi possível carregar o vídeo.');
         mostrarErro(
           'Confira se memoria.mp4.mp4 está na raiz do GitHub Pages e se o vídeo abre no navegador.'
@@ -370,26 +444,12 @@
         btnTentar.style.display = 'block';
       });
 
-      video.addEventListener('playing', () => {
-        atualizarTextura();
-
-        if (alvoVisivel) {
-          limparErro();
-          plano.setAttribute('visible', true);
-          btnReproduzir.textContent = '▶ Reiniciar lembrança';
-
-          // Esconde o painel para deixar a lembrança em destaque.
-          painel.style.display = 'none';
-        }
-      });
-
       alvo.addEventListener('targetFound', () => {
         alvoVisivel = true;
-        autoPlayTentado = false;
+        tentativaAutomaticaFeita = false;
 
-        mostrarPainel();
+        painel.style.display = 'block';
         limparErro();
-
         acoes.style.display = 'none';
         btnReproduzir.style.display = 'block';
         btnReproduzir.disabled = false;
@@ -401,20 +461,21 @@
 
         carregarVideo();
 
-        // Se o vídeo já estiver carregado, tenta reproduzir imediatamente.
-        tentarReproducaoAutomatica();
+        if (videoPronto) {
+          tentarReproducaoAutomatica();
+        }
       });
 
       alvo.addEventListener('targetLost', () => {
         alvoVisivel = false;
-        autoPlayTentado = false;
+        tentativaAutomaticaFeita = false;
 
-        mostrarPainel();
-        acoes.style.display = 'none';
         plano.setAttribute('visible', false);
         video.pause();
 
-        informar('Uma lembrança especial está esperando por você.\nAponte a câmera para a foto.');
+        painel.style.display = 'block';
+        acoes.style.display = 'none';
+        informar('Aponte a câmera novamente para a foto.');
       });
 
       function esperarVideo() {
@@ -462,7 +523,6 @@
           video.addEventListener('loadeddata', pronto);
           video.addEventListener('canplay', pronto);
           video.addEventListener('error', falhou);
-
           pronto();
         });
       }
@@ -487,45 +547,31 @@
           await video.play();
 
           atualizarTextura();
-
-          await new Promise(resolve => requestAnimationFrame(resolve));
-          atualizarTextura();
-
           plano.setAttribute('visible', true);
-          btnReproduzir.textContent = '▶ Reiniciar lembrança';
-          btnTentar.style.display = 'none';
-          informar('Lembrança reproduzindo!');
-
-        } catch (e) {
-          mostrarPainel();
-          plano.setAttribute('visible', false);
-
-          informar('Não foi possível iniciar o vídeo com som.');
+        } catch (erro) {
+          painel.style.display = 'block';
+          informar('Não foi possível iniciar o vídeo.');
           mostrarErro(
-            'Toque em Reproduzir lembrança para tentar novamente. O navegador pode bloquear a reprodução automática com som.'
+            'Verifique a conexão e tente novamente. Alguns navegadores exigem um toque para permitir o áudio.'
           );
-
           acoes.style.display = 'flex';
-          btnReproduzir.style.display = 'block';
           btnTentar.style.display = 'block';
-
         } finally {
           btnReproduzir.disabled = false;
         }
       }
 
+      btnAbrirCamera.addEventListener('click', iniciarCamera);
+
       btnReproduzir.addEventListener('click', async () => {
-        if (!alvoVisivel) {
-          informar('Aponte a câmera para a foto primeiro.');
-          return;
-        }
+        if (!alvoVisivel) return;
 
         if (!video.paused && !video.ended) {
           video.currentTime = 0;
           return;
         }
 
-        autoPlayTentado = true;
+        tentativaAutomaticaFeita = true;
         await reproduzir();
       });
 
@@ -537,7 +583,7 @@
 
         carregando = false;
         videoPronto = false;
-        autoPlayTentado = false;
+        tentativaAutomaticaFeita = false;
 
         btnTentar.style.display = 'none';
         btnReproduzir.style.display = 'block';
@@ -550,33 +596,32 @@
 
           if (alvoVisivel) {
             videoPronto = true;
-            autoPlayTentado = false;
+            tentativaAutomaticaFeita = false;
             await tentarReproducaoAutomatica();
 
             if (video.paused) {
-              informar('Vídeo pronto! Toque para reproduzir a lembrança.');
+              painel.style.display = 'block';
+              informar('Vídeo pronto! Toque para reproduzir.');
               acoes.style.display = 'flex';
             }
           }
-        } catch (e) {
-          mostrarPainel();
+        } catch (erro) {
+          painel.style.display = 'block';
           informar('Falha ao carregar o vídeo.');
-          mostrarErro(e.message);
+          mostrarErro(erro.message);
           acoes.style.display = 'flex';
           btnTentar.style.display = 'block';
         }
       });
 
-      cena.addEventListener('loaded', () => {
-        informar('Inicializando câmera. Permita o acesso se solicitado.');
-      });
-
       cena.addEventListener('arReady', () => {
-        informar('Uma lembrança especial está esperando por você.\nAponte a câmera para a foto.');
+        if (cameraIniciada && !alvoVisivel) {
+          informar('Câmera pronta. Aponte para a foto.');
+        }
       });
 
       cena.addEventListener('arError', () => {
-        mostrarPainel();
+        painel.style.display = 'block';
         informar('Não foi possível iniciar a câmera.');
         mostrarErro('Confira a permissão da câmera no navegador.');
       });
