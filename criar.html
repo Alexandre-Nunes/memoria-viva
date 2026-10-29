@@ -8,6 +8,7 @@
   <title>Criar lembrança | Memória Viva</title>
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 24px 16px;
@@ -16,10 +17,12 @@
       color: white;
       font-family: Arial, sans-serif;
     }
-    main { max-width: 480px; margin: 25px auto; }
+
+    main { max-width: 520px; margin: 25px auto; }
     h1 { color: #d8b58a; text-align: center; }
     p { color: #d9e0e5; line-height: 1.5; }
     label { display: block; margin: 20px 0 8px; font-weight: bold; }
+
     input, textarea {
       width: 100%;
       padding: 13px;
@@ -27,7 +30,10 @@
       border: 1px solid #aab4bc;
       font: inherit;
     }
+
+    input[type="file"] { background: white; color: #182029; }
     textarea { min-height: 120px; resize: vertical; }
+
     button {
       width: 100%;
       margin-top: 24px;
@@ -40,6 +46,7 @@
       font-weight: bold;
       cursor: pointer;
     }
+
     button:disabled { opacity: .6; }
     #resultado { margin-top: 20px; overflow-wrap: anywhere; }
     .aviso { font-size: 13px; color: #c6d0d7; }
@@ -48,28 +55,39 @@
 <body>
 <main>
   <h1>Crie uma Memória Viva ♡</h1>
-  <p>Transforme uma foto especial em uma lembrança para compartilhar.</p>
+  <p>Transforme fotos, vídeos e palavras especiais em uma lembrança digital.</p>
 
   <form id="formulario">
     <label for="titulo">Nome da lembrança</label>
     <input id="titulo" name="titulo" maxlength="150"
       required placeholder="Ex.: Nossa história">
 
-    <label for="destinatario">Nome de quem vai receber a lembrança</label>
-<input id="destinatario" name="destinatario" maxlength="150"
-  required placeholder="Nome do destinatário">
+    <label for="destinatario">Nome de quem vai receber</label>
+    <input id="destinatario" name="destinatario" maxlength="150"
+      required placeholder="Nome do destinatário">
 
-<label for="whatsapp">WhatsApp de quem vai receber</label>
-<input id="whatsapp" name="whatsapp" type="tel"
-  required placeholder="Ex.: 5511999999999">
+    <label for="whatsapp">WhatsApp de quem vai receber</label>
+    <input id="whatsapp" name="whatsapp" type="tel" maxlength="30"
+      required placeholder="Ex.: 5511999999999">
+
     <label for="mensagem">Mensagem especial</label>
     <textarea id="mensagem" name="mensagem" maxlength="10000"
       placeholder="Escreva sua mensagem..."></textarea>
 
-    <label for="foto">Foto que será reconhecida pela câmera</label>
+    <label for="foto">Foto principal que será reconhecida pela câmera</label>
     <input id="foto" name="foto" type="file"
       accept="image/jpeg,image/png,image/webp" required>
-    <p class="aviso">Escolha uma foto nítida, com até 5 MB.</p>
+    <p class="aviso">JPG, PNG ou WebP. Máximo de 5 MB.</p>
+
+    <label for="fotos_adicionais">Fotos adicionais da lembrança</label>
+    <input id="fotos_adicionais" name="fotos_adicionais"
+      type="file" accept="image/jpeg,image/png,image/webp" multiple>
+    <p class="aviso">Selecione várias fotos para a apresentação. Máximo de 20 MB no total.</p>
+
+    <label for="videos">Vídeos da lembrança</label>
+    <input id="videos" name="videos" type="file"
+      accept="video/mp4,video/webm" multiple>
+    <p class="aviso">Selecione vídeos MP4 ou WebM. Máximo de 50 MB no total.</p>
 
     <button id="enviar" type="submit">Criar minha lembrança</button>
   </form>
@@ -81,7 +99,6 @@
 const ENDPOINT =
   "https://rwwufkljbkatzckiyazh.supabase.co/functions/v1/bright-api";
 
-// Insira aqui a chave pública (publishable key) do seu projeto Supabase.
 const CHAVE_PUBLICA = "sb_publishable_zsHHoB3mP3-Hj4KBBlujzA_Ib4zDlzH";
 
 const formulario = document.getElementById("formulario");
@@ -92,13 +109,9 @@ formulario.addEventListener("submit", async (evento) => {
   evento.preventDefault();
   resultado.textContent = "";
 
-  if (CHAVE_PUBLICA === "COLE_SUA_CHAVE_PUBLICA_AQUI") {
-    resultado.textContent =
-      "Falta configurar a chave pública do Supabase.";
-    return;
-  }
-
   const foto = document.getElementById("foto").files[0];
+  const fotos = document.getElementById("fotos_adicionais").files;
+  const videos = document.getElementById("videos").files;
 
   if (!foto) {
     resultado.textContent = "Selecione a foto principal.";
@@ -106,11 +119,25 @@ formulario.addEventListener("submit", async (evento) => {
   }
 
   if (foto.size > 5 * 1024 * 1024) {
-    resultado.textContent = "A foto deve ter no máximo 5 MB.";
+    resultado.textContent = "A foto principal deve ter no máximo 5 MB.";
+    return;
+  }
+
+  const totalFotos = Array.from(fotos).reduce((soma, arquivo) => soma + arquivo.size, 0);
+  const totalVideos = Array.from(videos).reduce((soma, arquivo) => soma + arquivo.size, 0);
+
+  if (totalFotos > 20 * 1024 * 1024) {
+    resultado.textContent = "As fotos adicionais devem somar no máximo 20 MB.";
+    return;
+  }
+
+  if (totalVideos > 50 * 1024 * 1024) {
+    resultado.textContent = "Os vídeos devem somar no máximo 50 MB.";
     return;
   }
 
   const dados = new FormData(formulario);
+
   botao.disabled = true;
   botao.textContent = "Criando lembrança...";
 
@@ -118,8 +145,8 @@ formulario.addEventListener("submit", async (evento) => {
     const resposta = await fetch(ENDPOINT, {
       method: "POST",
       headers: {
-        "apikey": CHAVE_PUBLICA,
-        "Authorization": `Bearer ${CHAVE_PUBLICA}`
+        apikey: CHAVE_PUBLICA,
+        Authorization: `Bearer ${CHAVE_PUBLICA}`
       },
       body: dados
     });
@@ -132,6 +159,7 @@ formulario.addEventListener("submit", async (evento) => {
 
     resultado.textContent =
       "Lembrança criada! Código: " + retorno.lembranca.codigo;
+
     formulario.reset();
   } catch (erro) {
     resultado.textContent =
