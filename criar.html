@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101820">
+  <title>Criar lembrança | Memória Viva</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      min-height: 100vh;
+      background: linear-gradient(160deg, #101820, #253746);
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    main { max-width: 480px; margin: 25px auto; }
+    h1 { color: #d8b58a; text-align: center; }
+    p { color: #d9e0e5; line-height: 1.5; }
+    label { display: block; margin: 20px 0 8px; font-weight: bold; }
+    input, textarea {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: 1px solid #aab4bc;
+      font: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      border: 0;
+      border-radius: 12px;
+      background: #d8b58a;
+      color: #182029;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; }
+    #resultado { margin-top: 20px; overflow-wrap: anywhere; }
+    .aviso { font-size: 13px; color: #c6d0d7; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Crie uma Memória Viva ♡</h1>
+  <p>Transforme uma foto especial em uma lembrança para compartilhar.</p>
+
+  <form id="formulario">
+    <label for="titulo">Nome da lembrança</label>
+    <input id="titulo" name="titulo" maxlength="150"
+      required placeholder="Ex.: Nossa história">
+
+    <label for="mensagem">Mensagem especial</label>
+    <textarea id="mensagem" name="mensagem" maxlength="10000"
+      placeholder="Escreva sua mensagem..."></textarea>
+
+    <label for="foto">Foto que será reconhecida pela câmera</label>
+    <input id="foto" name="foto" type="file"
+      accept="image/jpeg,image/png,image/webp" required>
+    <p class="aviso">Escolha uma foto nítida, com até 5 MB.</p>
+
+    <button id="enviar" type="submit">Criar minha lembrança</button>
+  </form>
+
+  <div id="resultado" role="status" aria-live="polite"></div>
+</main>
+
+<script>
+const ENDPOINT =
+  "https://rwwufkljbkatzckiyazh.supabase.co/functions/v1/bright-api";
+
+// Insira aqui a chave pública (publishable key) do seu projeto Supabase.
+const CHAVE_PUBLICA = "COLE_SUA_CHAVE_PUBLICA_AQUI";
+
+const formulario = document.getElementById("formulario");
+const botao = document.getElementById("enviar");
+const resultado = document.getElementById("resultado");
+
+formulario.addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  resultado.textContent = "";
+
+  if (CHAVE_PUBLICA === "COLE_SUA_CHAVE_PUBLICA_AQUI") {
+    resultado.textContent =
+      "Falta configurar a chave pública do Supabase.";
+    return;
+  }
+
+  const foto = document.getElementById("foto").files[0];
+
+  if (!foto) {
+    resultado.textContent = "Selecione a foto principal.";
+    return;
+  }
+
+  if (foto.size > 5 * 1024 * 1024) {
+    resultado.textContent = "A foto deve ter no máximo 5 MB.";
+    return;
+  }
+
+  const dados = new FormData(formulario);
+  botao.disabled = true;
+  botao.textContent = "Criando lembrança...";
+
+  try {
+    const resposta = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "apikey": CHAVE_PUBLICA,
+        "Authorization": `Bearer ${CHAVE_PUBLICA}`
+      },
+      body: dados
+    });
+
+    const retorno = await resposta.json();
+
+    if (!resposta.ok || !retorno.sucesso) {
+      throw new Error(retorno.erro || "Não foi possível criar a lembrança.");
+    }
+
+    resultado.textContent =
+      "Lembrança criada! Código: " + retorno.lembranca.codigo;
+    formulario.reset();
+  } catch (erro) {
+    resultado.textContent =
+      erro.message || "Falha de conexão. Tente novamente.";
+  } finally {
+    botao.disabled = false;
+    botao.textContent = "Criar minha lembrança";
+  }
+});
+</script>
+</body>
+</html>
