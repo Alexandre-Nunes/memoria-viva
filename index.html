@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#101820">
   <title>Memória Viva</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
@@ -25,11 +25,9 @@
       font-family: Arial, sans-serif;
     }
 
-    /* Correção da transparência da câmera e da cena AR */
     a-scene {
       position: fixed !important;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
       background: transparent !important;
@@ -40,7 +38,16 @@
       background: transparent !important;
     }
 
-    /* Vídeo da lembrança, separado do vídeo da câmera */
+    body > video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
     #memoryVideo {
       position: fixed;
       left: 0;
@@ -55,77 +62,105 @@
     #painel {
       position: fixed;
       z-index: 1000;
-      top: calc(env(safe-area-inset-top, 0px) + 12px);
-      left: 12px;
-      right: 12px;
-      padding: 14px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.82);
+      top: calc(env(safe-area-inset-top, 0px) + 18px);
+      left: 16px;
+      right: 16px;
+      padding: 20px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      background: rgba(16, 24, 32, 0.82);
       color: #fff;
       text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      transition: opacity 0.25s ease;
     }
 
     #titulo {
-      margin-bottom: 7px;
-      font-size: 20px;
-      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 25px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: 0.2px;
     }
 
     #status {
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.5;
+      color: #e0e5e9;
     }
 
     #acoes {
       display: none;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 9px;
+      margin-top: 16px;
     }
 
     button {
       width: 100%;
-      min-height: 46px;
-      padding: 12px;
+      min-height: 48px;
+      padding: 13px 16px;
       border: 0;
-      border-radius: 9px;
-      background: #fff;
-      color: #111;
-      font-size: 16px;
-      font-weight: bold;
+      border-radius: 12px;
+      background: #d8b58a;
+      color: #182029;
+      font-size: 15px;
+      font-weight: 700;
       cursor: pointer;
       touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      transform: scale(0.98);
     }
 
     button:disabled {
-      opacity: 0.55;
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    #btnTentar {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
     }
 
     #diagnostico {
       display: none;
-      margin-top: 10px;
+      margin-top: 12px;
       color: #ffd7d7;
       font-size: 12px;
-      line-height: 1.4;
+      line-height: 1.5;
       overflow-wrap: anywhere;
     }
- /* Correção do fundo preto da câmera */
-body > video {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  pointer-events: none;
-}
+
+    @media (max-width: 360px) {
+      #painel {
+        top: calc(env(safe-area-inset-top, 0px) + 12px);
+        left: 12px;
+        right: 12px;
+        padding: 16px 14px;
+        border-radius: 16px;
+      }
+
+      #titulo {
+        font-size: 22px;
+      }
+
+      #status {
+        font-size: 13px;
+      }
+    }
   </style>
 </head>
 
 <body>
   <div id="painel">
     <div id="titulo">Memória Viva</div>
-    <div id="status">Iniciando a realidade aumentada...</div>
+    <div id="status">Uma lembrança especial está esperando por você.<br>Aponte a câmera para a foto.</div>
 
     <div id="acoes">
       <button id="btnReproduzir">▶ Reproduzir lembrança</button>
@@ -184,6 +219,7 @@ body > video {
       const alvo = document.getElementById('alvo');
       const plano = document.getElementById('videoPlane');
       const cena = document.querySelector('a-scene');
+      const painel = document.getElementById('painel');
 
       const status = document.getElementById('status');
       const acoes = document.getElementById('acoes');
@@ -195,6 +231,8 @@ body > video {
       let alvoVisivel = false;
       let carregando = false;
       let videoPronto = false;
+      let autoPlayEmAndamento = false;
+      let autoPlayTentado = false;
 
       function informar(mensagem) {
         status.textContent = mensagem;
@@ -210,12 +248,16 @@ body > video {
         diagnostico.style.display = 'none';
       }
 
+      function mostrarPainel() {
+        painel.style.display = 'block';
+      }
+
       function carregarVideo() {
         if (carregando || videoPronto) return;
 
         carregando = true;
         limparErro();
-        informar('Carregando o vídeo...');
+        informar('Preparando sua lembrança...');
 
         video.src = new URL('./memoria.mp4.mp4', document.baseURI).href;
         video.load();
@@ -244,13 +286,60 @@ body > video {
         }
       }
 
+      async function tentarReproducaoAutomatica() {
+        if (
+          !alvoVisivel ||
+          !videoPronto ||
+          !video.paused ||
+          autoPlayTentado ||
+          autoPlayEmAndamento
+        ) {
+          return;
+        }
+
+        autoPlayTentado = true;
+        autoPlayEmAndamento = true;
+        limparErro();
+
+        try {
+          video.muted = false;
+          await video.play();
+
+          if (!alvoVisivel) {
+            video.pause();
+            return;
+          }
+
+          atualizarTextura();
+          plano.setAttribute('visible', true);
+
+          btnReproduzir.textContent = '▶ Reiniciar lembrança';
+          informar('Lembrança reproduzindo!');
+          acoes.style.display = 'none';
+          limparErro();
+
+        } catch (e) {
+          if (!alvoVisivel) return;
+
+          mostrarPainel();
+          informar('Foto reconhecida! Toque para iniciar a lembrança.');
+          acoes.style.display = 'flex';
+          btnReproduzir.style.display = 'block';
+          btnReproduzir.disabled = false;
+          btnReproduzir.textContent = '▶ Reproduzir lembrança';
+
+        } finally {
+          autoPlayEmAndamento = false;
+        }
+      }
+
       video.addEventListener('loadeddata', () => {
         carregando = false;
         videoPronto = video.videoWidth > 0;
         atualizarTextura();
 
         if (alvoVisivel && videoPronto) {
-          informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+          tentarReproducaoAutomatica();
         }
       });
 
@@ -259,8 +348,8 @@ body > video {
         videoPronto = video.videoWidth > 0;
         atualizarTextura();
 
-        if (alvoVisivel && video.paused && videoPronto) {
-          informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+        if (alvoVisivel && videoPronto) {
+          tentarReproducaoAutomatica();
         }
       });
 
@@ -270,10 +359,14 @@ body > video {
 
         if (!alvoVisivel) return;
 
+        mostrarPainel();
         informar('Não foi possível carregar o vídeo.');
         mostrarErro(
           'Confira se memoria.mp4.mp4 está na raiz do GitHub Pages e se o vídeo abre no navegador.'
         );
+
+        acoes.style.display = 'flex';
+        btnReproduzir.style.display = 'none';
         btnTentar.style.display = 'block';
       });
 
@@ -282,29 +375,46 @@ body > video {
 
         if (alvoVisivel) {
           limparErro();
-          informar('Lembrança reproduzindo!');
+          plano.setAttribute('visible', true);
           btnReproduzir.textContent = '▶ Reiniciar lembrança';
+
+          // Esconde o painel para deixar a lembrança em destaque.
+          painel.style.display = 'none';
         }
       });
 
       alvo.addEventListener('targetFound', () => {
         alvoVisivel = true;
-        acoes.style.display = 'flex';
-        plano.setAttribute('visible', false);
+        autoPlayTentado = false;
+
+        mostrarPainel();
+        limparErro();
+
+        acoes.style.display = 'none';
+        btnReproduzir.style.display = 'block';
         btnReproduzir.disabled = false;
         btnReproduzir.textContent = '▶ Reproduzir lembrança';
+        btnTentar.style.display = 'none';
 
-        informar('Foto reconhecida! Preparando o vídeo.');
+        plano.setAttribute('visible', false);
+        informar('Foto reconhecida! Preparando sua lembrança...');
+
         carregarVideo();
+
+        // Se o vídeo já estiver carregado, tenta reproduzir imediatamente.
+        tentarReproducaoAutomatica();
       });
 
       alvo.addEventListener('targetLost', () => {
         alvoVisivel = false;
+        autoPlayTentado = false;
+
+        mostrarPainel();
         acoes.style.display = 'none';
         plano.setAttribute('visible', false);
         video.pause();
 
-        informar('Foto fora de visão. Aponte novamente para a foto.');
+        informar('Uma lembrança especial está esperando por você.\nAponte a câmera para a foto.');
       });
 
       function esperarVideo() {
@@ -373,7 +483,6 @@ body > video {
 
           if (!alvoVisivel) return;
 
-          /* Tenta iniciar o vídeo com som, sem botão adicional. */
           video.muted = false;
           await video.play();
 
@@ -385,14 +494,19 @@ body > video {
           plano.setAttribute('visible', true);
           btnReproduzir.textContent = '▶ Reiniciar lembrança';
           btnTentar.style.display = 'none';
-          informar('Lembrança reproduzindo com som!');
+          informar('Lembrança reproduzindo!');
 
         } catch (e) {
+          mostrarPainel();
           plano.setAttribute('visible', false);
+
           informar('Não foi possível iniciar o vídeo com som.');
           mostrarErro(
-            'Toque em Reproduzir lembrança para tentar novamente. Se o navegador bloquear o áudio, poderá ser necessário verificar as permissões de reprodução.'
+            'Toque em Reproduzir lembrança para tentar novamente. O navegador pode bloquear a reprodução automática com som.'
           );
+
+          acoes.style.display = 'flex';
+          btnReproduzir.style.display = 'block';
           btnTentar.style.display = 'block';
 
         } finally {
@@ -411,6 +525,7 @@ body > video {
           return;
         }
 
+        autoPlayTentado = true;
         await reproduzir();
       });
 
@@ -422,6 +537,11 @@ body > video {
 
         carregando = false;
         videoPronto = false;
+        autoPlayTentado = false;
+
+        btnTentar.style.display = 'none';
+        btnReproduzir.style.display = 'block';
+        btnReproduzir.disabled = false;
 
         carregarVideo();
 
@@ -429,11 +549,21 @@ body > video {
           await esperarVideo();
 
           if (alvoVisivel) {
-            informar('Vídeo pronto! Toque em Reproduzir lembrança.');
+            videoPronto = true;
+            autoPlayTentado = false;
+            await tentarReproducaoAutomatica();
+
+            if (video.paused) {
+              informar('Vídeo pronto! Toque para reproduzir a lembrança.');
+              acoes.style.display = 'flex';
+            }
           }
         } catch (e) {
+          mostrarPainel();
           informar('Falha ao carregar o vídeo.');
           mostrarErro(e.message);
+          acoes.style.display = 'flex';
+          btnTentar.style.display = 'block';
         }
       });
 
@@ -442,10 +572,11 @@ body > video {
       });
 
       cena.addEventListener('arReady', () => {
-        informar('Câmera pronta. Aponte para a foto do fotolivro.');
+        informar('Uma lembrança especial está esperando por você.\nAponte a câmera para a foto.');
       });
 
       cena.addEventListener('arError', () => {
+        mostrarPainel();
         informar('Não foi possível iniciar a câmera.');
         mostrarErro('Confira a permissão da câmera no navegador.');
       });
